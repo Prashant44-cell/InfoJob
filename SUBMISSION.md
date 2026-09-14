@@ -87,8 +87,8 @@ The dataset is included in the repository in four production formats:
 ---
 
 ## 3. Exact Commit Hash
-- **Commit Hash (SHA-1)**: `1496ec0662f6e7893c5fadbcad96153648fc16b8`
-- **Short Hash**: `1496ec0`
+- **Commit Hash (SHA-1)**: `28cc96d0d8cf7b479c6f8f06d8d14143c7a95bbb`
+- **Short Hash**: `28cc96d`
 
 ---
 

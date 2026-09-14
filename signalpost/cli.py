@@ -147,6 +147,9 @@ def run_batch_generation(count: int = 1000):
 
 def run_server(port: int = 8000):
     import socket
+    import threading
+    import time
+    import webbrowser
     import uvicorn
 
     def is_port_in_use(p: int) -> bool:
@@ -162,11 +165,29 @@ def run_server(port: int = 8000):
         print(f"[!] Warning: Port {target_port} is occupied by another process.")
         for alt in range(target_port + 1, target_port + 10):
             if not is_port_in_use(alt):
-                print(f"[*] Falling back to available port http://localhost:{alt}")
+                print(f"[*] Falling back to available port http://127.0.0.1:{alt}")
                 target_port = alt
                 break
 
     print_banner()
-    print(f"[*] Starting SignalPost Web Dashboard & REST API on http://localhost:{target_port}")
+    print("=" * 78)
+    print(f"[*] SIGNALPOST WEB DASHBOARD & REST API IS READY")
+    print(f"[*] Primary URL (Recommended):  http://127.0.0.1:{target_port}")
+    print(f"[*] Localhost URL:             http://localhost:{target_port}")
+    print(f"[*] Interactive API Docs:      http://127.0.0.1:{target_port}/docs")
+    print(f"[*] Press CTRL+C in this terminal to stop the server.")
+    print("=" * 78)
+
+    # Automatically launch default browser after server initializes
+    def _open_browser():
+        time.sleep(1.0)
+        try:
+            webbrowser.open(f"http://127.0.0.1:{target_port}")
+        except Exception:
+            pass
+
+    threading.Thread(target=_open_browser, daemon=True).start()
+
     uvicorn.run("signalpost.api:app", host="0.0.0.0", port=target_port, reload=False)
+
 

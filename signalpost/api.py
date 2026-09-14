@@ -139,3 +139,12 @@ if os.path.exists(WEB_DIR):
     @app.get("/")
     def serve_ui():
         return FileResponse(os.path.join(WEB_DIR, "index.html"))
+
+    @app.get("/styles.css")
+    def serve_styles():
+        return FileResponse(os.path.join(WEB_DIR, "styles.css"), media_type="text/css")
+
+    @app.get("/app.js")
+    def serve_app_js():
+        return FileResponse(os.path.join(WEB_DIR, "app.js"), media_type="application/javascript")
+
