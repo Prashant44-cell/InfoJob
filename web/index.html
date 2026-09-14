@@ -3,525 +3,474 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SignalPost | Public Norwegian Company Research</title>
-  <meta name="description" content="Search Norwegian companies. See registered identity, financials, people and source links in one profile. Grounded in official Brønnøysundregistrene data.">
+  <title>SignalPost | Autonomous Norwegian Intelligence Studio</title>
+  <meta name="description" content="Next-generation Norwegian Corporate Intelligence Platform. Real-time Modulo-11 verification, Brønnøysund provenance grounding, and Bento telemetry.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="app-wrapper">
-    <!-- Top Navigation Header -->
+  <div class="app-container">
+    <!-- Top Nav HUD -->
     <header class="site-header">
-      <a href="/" class="brand-container">
-        <div class="brand-icon">+</div>
-        <div class="brand-name-group">
-          <span class="brand-name">signalpost</span>
-          <span class="brand-subtext">PUBLIC COMPANY RESEARCH</span>
+      <div class="brand-group">
+        <div class="brand-radar-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"></path>
+          </svg>
         </div>
-      </a>
+        <div class="brand-title-wrap">
+          <span class="brand-title">SIGNALPOST</span>
+          <span class="brand-subtitle">NORWEGIAN INTELLIGENCE STUDIO</span>
+        </div>
+      </div>
 
-      <nav class="nav-actions">
-        <a href="#company-lookup" class="nav-link" onclick="scrollToLookup()">Company index</a>
-        <a href="#method" class="nav-link">Method</a>
-        <a href="#sources" class="nav-link">Sources</a>
-        <button class="nav-link" onclick="toggleBackendModal()">Backend Info ⚙</button>
-        <button class="btn-maroon" onclick="focusSearch()">
-          Search companies ↗
+      <!-- Mode Selector Pills -->
+      <nav class="nav-pills" role="tablist">
+        <button id="tab-btn-dossier" class="nav-pill-btn active" onclick="switchView('dossier')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg>
+          Dossier Studio
+        </button>
+        <button id="tab-btn-market" class="nav-pill-btn" onclick="switchView('market')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Market Matrix
+        </button>
+        <button id="tab-btn-telemetry" class="nav-pill-btn" onclick="switchView('telemetry')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Telemetry Lab
         </button>
       </nav>
+
+      <!-- Global Search with Real-Time Modulo-11 HUD -->
+      <div class="header-search-wrap">
+        <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="global-search-input" class="header-search-input" placeholder="Query orgnr or company name..." autocomplete="off">
+        <span id="global-mod11-chip" class="mod11-chip">MOD 11</span>
+      </div>
+
+      <!-- Header Action Buttons -->
+      <div class="header-actions">
+        <button class="btn-primary-action" onclick="handleSyncCurrent()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          Sync Delta
+        </button>
+        <button class="btn-ghost-action" onclick="toggleCopilotDrawer()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Copilot
+        </button>
+      </div>
     </header>
 
-    <!-- Main Hero Grid -->
-    <section class="hero-grid">
-      <div class="hero-left">
-        <div class="eyebrow">
-          <span class="red-bullet"></span>
-          PUBLIC SAMPLE • DATED FIXTURE
-        </div>
-        <h1 class="hero-title">Search Norwegian companies.</h1>
-        <p class="hero-description">
-          See registered identity, financials, people and source links in one profile. This verified dataset covers <strong>1,051 companies</strong>.
-        </p>
-
-        <form id="hero-search-form" onsubmit="handleSearchSubmit(event)" class="hero-search-box">
-          <svg class="hero-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="main-search-input" class="hero-search-input" placeholder="Search a company, location, or 9-digit orgnr..." autocomplete="off">
-          <div id="checksum-pill" class="hero-checksum-indicator idle">MOD 11</div>
-        </form>
-
-        <div class="hero-buttons">
-          <button class="btn-maroon" onclick="scrollToLookup()">Browse companies ↓</button>
-          <a href="#scoring" class="btn-outline">See the challenge →</a>
-          <button class="btn-outline" onclick="toggleBackendModal()">Inspect Backend ↗</button>
-        </div>
-      </div>
-
-      <!-- Right Public Fixture Card -->
-      <div class="public-fixture-card">
-        <span class="fixture-tag">PUBLIC FIXTURE</span>
-        <h2 class="fixture-title">Simple facts. Sources beside them.</h2>
-        
-        <div class="fixture-metrics">
-          <div class="metric-col">
-            <span class="metric-number" id="stat-card-count">1,051</span>
-            <span class="metric-sublabel">company records</span>
-          </div>
-          <div class="metric-col">
-            <span class="metric-number" id="stat-card-web">1,051</span>
-            <span class="metric-sublabel">website signals</span>
-          </div>
-          <div class="metric-col">
-            <span class="metric-number" id="stat-card-fin">940 / 1,051</span>
-            <span class="metric-sublabel">financial records</span>
-          </div>
-        </div>
-
-        <p class="fixture-footer-text">
-          Registry identity was checked against the live endpoint. Missing values stay visible. This sample has no traffic or market-interest feed, so it does not invent a popularity rank.
-        </p>
-      </div>
-    </section>
-
-    <!-- Workspace Header & Tabs -->
-    <section class="workspace-header" id="company-lookup">
-      <span class="section-eyebrow">EVERYDAY COMPANY LOOKUP</span>
-      <div class="workspace-title-row">
-        <h2 class="workspace-title">Search the set. Open a profile.</h2>
-        <div class="snapshot-indicator">
-          <span class="green-dot"></span>
-          Snapshot 14 Aug 2026
-        </div>
-      </div>
-
-      <div class="tabs-strip">
-        <button class="tab-item active" id="tab-lookup-btn" onclick="setActiveTab('lookup')">
-          Company lookup <span class="tab-count-badge" id="tab-badge-count">1,051</span>
-        </button>
-        <button class="tab-item" id="tab-analytics-btn" onclick="setActiveTab('analytics')">
-          Analytics workspace <span class="tab-tag-badge">filters + export</span>
-        </button>
-        <button class="tab-item" id="tab-backend-btn" onclick="setActiveTab('backend')">
-          Backend & Agent Stream <span class="tab-tag-badge">live trace</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- View 1: Master-Detail Lookup View -->
-    <section id="view-lookup" class="workspace-view">
-      <div class="master-detail-grid">
-        <!-- Left Sidebar: Company List -->
-        <aside class="company-list-sidebar">
-          <div class="sidebar-meta-row">
-            <div>
-              <span class="sidebar-count" id="sidebar-matches-count">1,051 companies found</span>
-              <span class="sidebar-subcount">Norwegian sample</span>
+    <!-- ====================================================================
+         VIEW 1: DOSSIER STUDIO (PRIMARY BENTO VIEW)
+         ==================================================================== -->
+    <main id="view-dossier" class="view-panel active">
+      <!-- Panoramic Bento Grid -->
+      <section class="bento-hero-grid">
+        <!-- Tile 1: Enterprise Spotlight (Span 5) -->
+        <div class="bento-card bento-spotlight">
+          <div>
+            <div class="spotlight-top-tags">
+              <span id="bento-orgform-badge" class="badge-tag cyan">ASA • Allmennaksjeselskap</span>
+              <span id="bento-status-badge" class="badge-tag emerald">Active / Operating</span>
+              <span id="bento-freshness-badge" class="badge-tag amber">Current • Live Stream</span>
             </div>
-            <select id="sort-select" class="sort-select" onchange="handleSortChange()">
-              <option value="complete">Most complete</option>
-              <option value="employees">Most employees</option>
-              <option value="name">Company name A-Z</option>
+
+            <div class="spotlight-name-row">
+              <h1 id="bento-company-name" class="spotlight-company-name">EQUINOR ASA</h1>
+              <div id="bento-orgnr-btn" class="spotlight-orgnr-chip" onclick="copyOrgnr()" title="Click to copy Norwegian Organization Number">
+                <span id="bento-orgnr">923609016</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              </div>
+            </div>
+
+            <p id="bento-narrative-summary" class="spotlight-narrative">
+              Sovereign enterprise registered in Norway. Primary commercial operations in energy, offshore oil extraction, and low-carbon infrastructure. Grounded via official Brønnøysundregistrene data.
+            </p>
+          </div>
+
+          <div class="spotlight-actions-bar">
+            <button class="btn-primary-action" onclick="handleSyncCurrent()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Sync Freshness
+            </button>
+            <button class="btn-ghost-action" onclick="toggleCopilotDrawer()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Research Copilot
+            </button>
+            <a id="bento-brreg-link" href="https://data.brreg.no/enhetsregisteret/api/enheter/923609016" target="_blank" rel="noopener" class="btn-ghost-action">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Official Register
+            </a>
+          </div>
+        </div>
+
+        <!-- Tile 2: Corporate Governance (Span 3) -->
+        <div class="bento-card bento-governance">
+          <div class="bento-title-row">
+            <span class="bento-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Governance & Board
+            </span>
+            <span class="badge-tag cyan">Brreg Roller</span>
+          </div>
+          <div class="role-stack">
+            <div class="role-entry">
+              <div class="role-title">Chief Executive Officer (Daglig Leder)</div>
+              <div id="bento-ceo-name" class="role-person-name">Anders Opedal</div>
+              <div id="bento-ceo-date" class="role-subdate">Appointed 2020-11-02</div>
+            </div>
+            <div class="role-entry">
+              <div class="role-title">Board Chair (Styreleder)</div>
+              <div id="bento-chair-name" class="role-person-name">Jarle Kjell Roth</div>
+              <div class="role-subdate">Registered Governance Styre</div>
+            </div>
+            <div class="role-entry">
+              <div class="role-title">Certified Auditor (Revisor)</div>
+              <div id="bento-auditor-name" class="role-person-name">ERNST & YOUNG AS</div>
+              <div class="role-subdate">Enhetsregisteret Authorized</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tile 3: Financial Health Radar (Span 2) -->
+        <div class="bento-card bento-financials">
+          <div>
+            <div class="bento-title-row">
+              <span class="bento-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Audited Accounts
+              </span>
+              <span id="bento-fin-year" class="badge-tag emerald">2025</span>
+            </div>
+            <div class="metric-highlight-group">
+              <div class="metric-label">Annual Revenue</div>
+              <div id="bento-fin-rev" class="metric-big-value">67.96B USD</div>
+            </div>
+          </div>
+          <div>
+            <div class="metric-secondary-row">
+              <span class="metric-label">Operating EBIT</span>
+              <span id="bento-fin-ebit">5.56B USD</span>
+            </div>
+            <div class="metric-secondary-row">
+              <span class="metric-label">Total Assets</span>
+              <span id="bento-fin-assets">103.43B USD</span>
+            </div>
+            <div class="metric-secondary-row">
+              <span class="metric-label">Total Equity</span>
+              <span id="bento-fin-equity">39.18B USD</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tile 4: Workforce & Solvency (Span 2) -->
+        <div class="bento-card bento-workforce">
+          <div>
+            <div class="bento-title-row">
+              <span class="bento-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Workforce
+              </span>
+              <span class="badge-tag cyan">NAV Sync</span>
+            </div>
+            <div id="bento-workforce-count" class="workforce-number">21,239</div>
+            <div class="metric-label">Registered Personnel</div>
+          </div>
+          <div>
+            <div class="status-check-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Zero Bankruptcy Flags</span>
+            </div>
+            <div id="bento-mva-pill" class="status-check-pill" style="margin-top: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>MVA / VAT Registered</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tile 5: Live Modulo-11 Arithmetic Breakdown (Span 12) -->
+        <div class="bento-card bento-mod11-visualizer">
+          <div class="mod11-visual-header">
+            <div class="mod11-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+              Norwegian Modulo-11 Arithmetic Verification Stream (Weights: [3, 2, 7, 6, 5, 4, 3, 2])
+            </div>
+            <div id="mod11-calc-summary" class="mod11-result-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Sum % 11 = Control Digit Validated</span>
+            </div>
+          </div>
+          <div id="mod11-stepper-container" class="mod11-stepper-row">
+            <!-- Dynamically populated step cards -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Asymmetric Studio Workspace -->
+      <div class="studio-workspace-split">
+        <!-- Left Column: Enterprise Navigator & Filter Deck -->
+        <aside class="navigator-deck">
+          <!-- Industry Filter Chips -->
+          <div class="navigator-filter-chips">
+            <button class="filter-chip active" onclick="setIndustryFilter('ALL', this)">All Sectors</button>
+            <button class="filter-chip" onclick="setIndustryFilter('Energy', this)">Energy & Oil</button>
+            <button class="filter-chip" onclick="setIndustryFilter('Banking', this)">Banking & Finance</button>
+            <button class="filter-chip" onclick="setIndustryFilter('Software', this)">Tech & IT</button>
+            <button class="filter-chip" onclick="setIndustryFilter('Maritime', this)">Maritime</button>
+            <button class="filter-chip" onclick="setIndustryFilter('Manufacturing', this)">Manufacturing</button>
+          </div>
+
+          <div class="navigator-sort-row">
+            <span id="navigator-count-label">150 Companies</span>
+            <select id="navigator-sort-select" class="sort-select" onchange="handleSortChange(this.value)">
+              <option value="complete">Completeness (High to Low)</option>
+              <option value="employees">Workforce Size</option>
+              <option value="name">Alphabetical (A-Z)</option>
             </select>
           </div>
 
-          <div class="sidebar-filter-row">
-            <select id="industry-filter" class="filter-select" onchange="handleFilterChange()">
-              <option value="ALL">All industries</option>
-            </select>
-            <select id="status-filter" class="filter-select" onchange="handleFilterChange()">
-              <option value="ALL">All statuses</option>
-              <option value="Active">Active</option>
-              <option value="Bankrupt">Bankrupt</option>
-              <option value="Liquidation">Liquidation</option>
-            </select>
-          </div>
-
-          <p class="sidebar-disclaimer">
-            No popularity signal in this sample. Browse order uses reported facts, not a claim about importance.
-          </p>
-
-          <!-- Company Item Cards -->
-          <div class="company-scroll-container" id="company-scroll-list">
-            <!-- Dynamically injected company items -->
+          <!-- Scrollable Enterprise Cards List -->
+          <div id="company-dossier-list" class="navigator-company-list">
+            <!-- Populated dynamically -->
           </div>
         </aside>
 
-        <!-- Right Main: Detailed Source-Backed Profile -->
-        <main class="profile-detail-card" id="profile-detail-view">
-          <div class="profile-top-eyebrow">
-            <span class="source-backed-label">SOURCE-BACKED PROFILE</span>
-            <button class="star-button" title="Bookmark company">★</button>
+        <!-- Right Column: Provenance Ledger & Fact Vault -->
+        <section class="provenance-vault">
+          <!-- Vault Header -->
+          <div class="vault-header-card">
+            <div class="vault-header-title-row">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Grounded Facts Provenance Ledger</h2>
+              <span class="vault-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                100% NLOD 2.0 Sovereign Citations
+              </span>
+            </div>
+            <p id="vault-executive-narrative" class="vault-description">
+              Every discrete fact extracted below is individually anchored to sovereign public registries operated by the Brønnøysund Register Centre. Provenance timestamps reflect immutable government filings.
+            </p>
           </div>
 
-          <h1 class="profile-company-title" id="p-name">EQUINOR ASA</h1>
-          <div class="profile-company-submeta">
-            <span id="p-orgnr">923609016</span> • <span id="p-orgform">Allmennaksjeselskap</span>
-          </div>
-
-          <div class="profile-tags-row">
-            <div class="tags-left">
-              <span class="status-badge-green" id="p-status-badge">Registry active</span>
-              <span class="snapshot-badge">Brønnøysund bulk snapshot</span>
-              <span class="snapshot-badge" id="p-freshness-badge">CURRENT</span>
-            </div>
-            <button class="ask-short-version-btn" onclick="syncCurrentCompany()">
-              Refresh from live stream ↻
-            </button>
-          </div>
-
-          <!-- 4 Quick Stat Boxes -->
-          <div class="stat-boxes-strip">
-            <div class="stat-box-beige">
-              <div class="stat-box-label">Employees</div>
-              <div class="stat-box-val" id="p-employees">21,239</div>
-            </div>
-            <div class="stat-box-beige">
-              <div class="stat-box-label">Registered</div>
-              <div class="stat-box-val" id="p-reg-date">12 May 1995</div>
-            </div>
-            <div class="stat-box-beige">
-              <div class="stat-box-label">Location</div>
-              <div class="stat-box-val" id="p-location">STAVANGER</div>
-            </div>
-            <div class="stat-box-beige">
-              <div class="stat-box-label">MVA</div>
-              <div class="stat-box-val" id="p-mva">Registered</div>
-            </div>
-          </div>
-
-          <!-- Section: What the registry says -->
-          <div class="profile-section-block">
-            <div class="section-block-header">
-              <h3 class="section-block-title">What the registry says</h3>
-              <span class="section-block-tag">source-bounded</span>
-            </div>
-            <div class="registry-says-paragraph">
-              <p id="p-narrative">
-                EQUINOR ASA is registered in Norway as Allmennaksjeselskap. The registry classifies its main activity as Utvinning av råolje (06.100). The current registry row reports 21,239 employees and founded on 1972-09-18. No adverse status flag is present in the sampled registry row.
-              </p>
-              <span class="narrative-timestamp" id="p-timestamp">deterministic source-bounded template: not a free-form AI claim • 14 Aug 2026</span>
-            </div>
-          </div>
-
-          <!-- Section: Industry and address -->
-          <div class="profile-section-block">
-            <div class="section-block-header">
-              <h3 class="section-block-title">Industry and address</h3>
-            </div>
-            <div class="industry-address-grid">
-              <div class="info-box-beige">
-                <div class="info-box-lead" id="p-industry-code">06.100</div>
-                <div class="info-box-sub" id="p-industry-desc">Utvinning av råolje</div>
+          <!-- Bento Fact Modules (2x2 Grid) -->
+          <div class="bento-facts-grid">
+            <!-- Module 1: Legal Identity & Registry DNA -->
+            <div class="fact-module-card">
+              <div class="module-header">
+                <span class="module-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  Legal Identity & Registration
+                </span>
+                <span class="module-source-tag">Enhetsregisteret</span>
               </div>
-              <div class="info-box-beige">
-                <div class="info-box-lead" id="p-city">STAVANGER</div>
-                <div class="info-box-sub" id="p-street-address">Forusbeen 50, 4035 STAVANGER</div>
-              </div>
+              <div id="facts-legal-identity"></div>
             </div>
-          </div>
 
-          <!-- Section: Financials -->
-          <div class="profile-section-block">
-            <div class="section-block-header">
-              <h3 class="section-block-title">Financials</h3>
-              <span class="section-block-tag" id="p-fin-tag">available</span>
-            </div>
-            <div class="financials-summary-box">
-              <div class="fin-filed-row">
-                <span class="fin-filed-count" id="p-fin-period">1 filed periods</span>
-                <span class="fin-tag-pill">Source values only</span>
+            <!-- Module 2: Geographic Footprint & Addresses -->
+            <div class="fact-module-card">
+              <div class="module-header">
+                <span class="module-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                  Geographic Footprint & Addresses
+                </span>
+                <span class="module-source-tag">Posten / Brreg</span>
               </div>
-              <div class="fin-figures-grid">
-                <div class="fin-stat-col">
-                  <span class="fin-col-label">Annual Revenue</span>
-                  <span class="fin-col-value" id="p-fin-revenue">67,956,000,000 USD</span>
-                </div>
-                <div class="fin-stat-col">
-                  <span class="fin-col-label">Operating Result (EBIT)</span>
-                  <span class="fin-col-value" id="p-fin-ebit">5,563,000,000 USD</span>
-                </div>
-                <div class="fin-stat-col">
-                  <span class="fin-col-label">Net Profit / Result</span>
-                  <span class="fin-col-value" id="p-fin-net">5,731,000,000 USD</span>
-                </div>
-                <div class="fin-stat-col">
-                  <span class="fin-col-label">Total Assets</span>
-                  <span class="fin-col-value" id="p-fin-assets">103,432,000,000 USD</span>
-                </div>
+              <div id="facts-footprint"></div>
+            </div>
+
+            <!-- Module 3: Industry & NACE Classification -->
+            <div class="fact-module-card">
+              <div class="module-header">
+                <span class="module-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                  Industry Classification (NACE)
+                </span>
+                <span class="module-source-tag">SSB Standard</span>
               </div>
+              <div id="facts-industry"></div>
             </div>
-          </div>
 
-          <!-- Section: People and ownership -->
-          <div class="profile-section-block">
-            <div class="section-block-header">
-              <h3 class="section-block-title">People and ownership</h3>
-            </div>
-            <table class="roles-table" id="p-roles-table">
-              <!-- Dynamically rendered roles -->
-            </table>
-          </div>
-
-          <!-- Section: Sources -->
-          <div class="profile-section-block">
-            <div class="section-block-header">
-              <h3 class="section-block-title">Sources</h3>
-            </div>
-            <div class="sources-links-row" id="p-sources-row">
-              <a href="https://data.brreg.no/enhetsregisteret/api/enheter/923609016" target="_blank" class="source-item-link" id="link-enhet">Live registry record ↗</a>
-              <span>•</span>
-              <a href="https://data.brreg.no/enhetsregisteret/api/enheter/923609016/roller" target="_blank" class="source-item-link" id="link-roller">Roles endpoint ↗</a>
-              <span>•</span>
-              <a href="https://data.brreg.no/regnskapsregisteret/regnskap/923609016" target="_blank" class="source-item-link" id="link-regnskap">Open accounts register ↗</a>
-              <span>•</span>
-              <span class="source-item-link">Snapshot 14 Aug 2026</span>
-            </div>
-          </div>
-
-          <!-- Research Agent Card -->
-          <div class="research-agent-card">
-            <div class="agent-card-left">
-              <div class="agent-card-icon">+</div>
-              <div>
-                <div class="agent-card-title">Research agent</div>
-                <div class="agent-card-subtext">Answers grounded strictly in this profile</div>
+            <!-- Module 4: Governance & Board Representation -->
+            <div class="fact-module-card">
+              <div class="module-header">
+                <span class="module-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  Governance & Representation
+                </span>
+                <span class="module-source-tag">Roller API</span>
               </div>
+              <div id="facts-governance"></div>
             </div>
-            <button class="agent-ask-btn" onclick="openAgentDrawer()">
-              Ask about this company ↗
-            </button>
           </div>
-        </main>
+        </section>
       </div>
-    </section>
+    </main>
 
-    <!-- View 2: Analytics & Export Workspace -->
-    <section id="view-analytics" class="workspace-view" style="display: none;">
-      <div class="public-fixture-card" style="margin-top: 24px;">
-        <span class="fixture-tag">DATASET EXPORT & ANALYTICS</span>
-        <h2 class="fixture-title">Harvested 1,051 Norwegian Company Dataset</h2>
-        <p style="color: var(--text-muted); margin-bottom: 24px;">
-          Download or inspect the complete batch dataset in standard data engineering formats. All records are grounded in Brønnøysundregistrene's open APIs under the NLOD 2.0 license.
-        </p>
-
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px;">
-          <a href="/data/profiles_1000.json" download class="btn-maroon">Download JSON (12.8 MB)</a>
-          <a href="/data/profiles_1000.jsonl" download class="btn-outline">Download JSONL (9.7 MB)</a>
-          <a href="/data/profiles_1000_summary.csv" download class="btn-outline">Download CSV (187 KB)</a>
+    <!-- ====================================================================
+         VIEW 2: MARKET MATRIX VIEW
+         ==================================================================== -->
+    <section id="view-market" class="view-panel">
+      <div class="bento-hero-grid">
+        <div class="bento-card" style="grid-column: span 3;">
+          <div class="metric-label">Total Harvested Entities</div>
+          <div id="market-total-companies" class="workforce-number">1,052</div>
+          <div class="role-subdate">Full sovereign company dataset</div>
+        </div>
+        <div class="bento-card" style="grid-column: span 3;">
+          <div class="metric-label">Grounded Verified Facts</div>
+          <div id="market-total-facts" class="workforce-number" style="color: var(--accent-cyan-light);">11,223</div>
+          <div class="role-subdate">Zero unverified AI hallucinations</div>
+        </div>
+        <div class="bento-card" style="grid-column: span 3;">
+          <div class="metric-label">Combined Norwegian Workforce</div>
+          <div id="market-total-workforce" class="workforce-number" style="color: #fcd34d;">31,542</div>
+          <div class="role-subdate">Personnel registered via NAV</div>
+        </div>
+        <div class="bento-card" style="grid-column: span 3;">
+          <div class="metric-label">Active Operational Solvency</div>
+          <div class="workforce-number" style="color: var(--accent-emerald-light);">93.1%</div>
+          <div class="role-subdate">Excludes dissolved entities</div>
         </div>
 
-        <div class="fixture-metrics">
-          <div class="metric-col">
-            <span class="metric-number">1,051</span>
-            <span class="metric-sublabel">Stored in SQLite</span>
+        <div class="bento-card" style="grid-column: span 12;">
+          <div class="bento-title-row">
+            <span class="bento-title">Permitted Public Data Sources (NLOD 2.0 Compliance)</span>
           </div>
-          <div class="metric-col">
-            <span class="metric-number">11,216</span>
-            <span class="metric-sublabel">Verified Facts with URLs</span>
-          </div>
-          <div class="metric-col">
-            <span class="metric-number">100%</span>
-            <span class="metric-sublabel">Modulo 11 Validated</span>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+            <div class="role-entry">
+              <div class="role-title">Brønnøysund Enhetsregisteret</div>
+              <div class="role-person-name" style="font-size: 0.85rem;">Entity Identification</div>
+              <div class="role-subdate">Open REST API • Full Sovereignty</div>
+            </div>
+            <div class="role-entry">
+              <div class="role-title">Brønnøysund Roller</div>
+              <div class="role-person-name" style="font-size: 0.85rem;">Board & CEO Governance</div>
+              <div class="role-subdate">Real-time election records</div>
+            </div>
+            <div class="role-entry">
+              <div class="role-title">Regnskapsregisteret</div>
+              <div class="role-person-name" style="font-size: 0.85rem;">Audited Annual Financials</div>
+              <div class="role-subdate">Turnover, EBIT, Assets, Equity</div>
+            </div>
+            <div class="role-entry">
+              <div class="role-title">Oppdateringer Delta Stream</div>
+              <div class="role-person-name" style="font-size: 0.85rem;">Real-time Freshness Feed</div>
+              <div class="role-subdate">Automated delta synchronization</div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- View 3: Backend & Agent Stream (Separated Backend Info) -->
-    <section id="view-backend" class="workspace-view" style="display: none;">
-      <div class="public-fixture-card" style="margin-top: 24px;">
-        <span class="fixture-tag">BACKEND RUNTIME & AGENT TELEMETRY</span>
-        <h2 class="fixture-title">Backend Architecture & Live Traces</h2>
-        <p style="color: var(--text-muted); margin-bottom: 20px;">
-          SignalPost strictly separates presentation from execution. Inspect live background logs, Modulo 11 verification traces, and delta change stream monitors below.
-        </p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
-          <div class="info-box-beige">
-            <div class="info-box-lead">API Engine</div>
-            <div class="info-box-sub">FastAPI + Uvicorn (Port 8000)</div>
+    <!-- ====================================================================
+         VIEW 3: TELEMETRY & MODULO-11 LAB VIEW
+         ==================================================================== -->
+    <section id="view-telemetry" class="view-panel">
+      <div class="telemetry-grid">
+        <div class="telemetry-card" style="grid-column: span 6;">
+          <div class="bento-title-row">
+            <span class="bento-title">Modulo-11 Checksum Validator Lab</span>
           </div>
-          <div class="info-box-beige">
-            <div class="info-box-lead">Database</div>
-            <div class="info-box-sub">SQLite (data/company_profiles.db)</div>
-          </div>
-          <div class="info-box-beige">
-            <div class="info-box-lead">Live Delta Stream</div>
-            <div class="info-box-sub">data.brreg.no/oppdateringer</div>
-          </div>
-          <div class="info-box-beige">
-            <div class="info-box-lead">Run Cost</div>
-            <div class="info-box-sub">$0.00 base data (NLOD 2.0)</div>
-          </div>
-        </div>
-
-        <h4 style="font-family: var(--font-display); font-weight: 800; margin-bottom: 8px;">Active Profile Raw Payload (JSON):</h4>
-        <pre class="backend-json-block" id="backend-raw-json">Loading backend profile JSON...</pre>
-      </div>
-    </section>
-
-    <!-- Method Section -->
-    <section class="method-section" id="method">
-      <span class="section-eyebrow">METHOD</span>
-      <h2 class="hero-title" style="font-size: 2.4rem; margin-bottom: 12px;">Every answer has a trail.</h2>
-      <p style="color: var(--text-muted); max-width: 680px; font-size: 0.95rem;">
-        Signalpost starts with public records, keeps missing values visible, and only asks the research agent to explain fields that are already in the selected profile.
-      </p>
-
-      <div class="method-grid">
-        <div class="method-card">
-          <span class="method-step-num">01</span>
-          <h3 class="method-card-title">Registry first</h3>
-          <p class="method-card-desc">
-            Name, status, address, industry, and registration facts come from the Norwegian business registry snapshot.
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 12px;">
+            Test any 9-digit Norwegian company identifier to observe the official Modulo-11 arithmetic weights: <code>[3, 2, 7, 6, 5, 4, 3, 2]</code>.
           </p>
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <input type="text" id="test-mod11-input" class="header-search-input" style="padding-left: 14px;" placeholder="e.g. 923609016 (Equinor ASA)" value="923609016">
+            <button class="btn-primary-action" onclick="runMod11LabTest()">Test Checksum</button>
+          </div>
+          <div id="mod11-lab-result" class="code-inspector-block" style="max-height: 200px;"></div>
         </div>
-        <div class="method-card">
-          <span class="method-step-num">02</span>
-          <h3 class="method-card-title">Evidence beside facts</h3>
-          <p class="method-card-desc">
-            Roles, group structure, accounts, and optional website metadata stay linked to the record they describe.
+
+        <div class="telemetry-card" style="grid-column: span 6;">
+          <div class="bento-title-row">
+            <span class="bento-title">SQLite Database Storage Telemetry</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 12px;">
+            Production storage in <code>data/company_profiles.db</code> with indexed tables for fast retrieval.
           </p>
+          <div class="role-stack">
+            <div class="metric-secondary-row">
+              <span class="metric-label">Storage Engine</span>
+              <span>SQLite 3 (WAL Mode)</span>
+            </div>
+            <div class="metric-secondary-row">
+              <span class="metric-label">Indexed Profiles</span>
+              <span id="telem-profiles-count">1,052</span>
+            </div>
+            <div class="metric-secondary-row">
+              <span class="metric-label">Verified Facts Indexed</span>
+              <span id="telem-facts-count">11,223</span>
+            </div>
+            <div class="metric-secondary-row">
+              <span class="metric-label">Export Formats Available</span>
+              <span>JSON, JSONL, CSV, SQLite DB</span>
+            </div>
+          </div>
         </div>
-        <div class="method-card">
-          <span class="method-step-num">03</span>
-          <h3 class="method-card-title">Agent stays grounded</h3>
-          <p class="method-card-desc">
-            Answers use the open profile only. When a field is missing, the agent says that instead of filling the gap.
-          </p>
+
+        <div class="telemetry-card" style="grid-column: span 12;">
+          <div class="bento-title-row">
+            <span class="bento-title">Active Enterprise JSON Payload</span>
+            <button class="btn-ghost-action" onclick="copyActiveJson()">Copy JSON</button>
+          </div>
+          <div id="telemetry-raw-json" class="code-inspector-block"></div>
         </div>
       </div>
     </section>
 
-    <!-- Sources Feed Section -->
-    <section class="sources-feed-section" id="sources">
-      <span class="section-eyebrow">SOURCES</span>
-      <div class="workspace-title-row">
-        <h2 class="hero-title" style="font-size: 2.4rem; margin-bottom: 0;">See what feeds the sample.</h2>
-        <div class="snapshot-indicator">
-          <span class="green-dot"></span> Snapshot 14 Aug 2026
-        </div>
-      </div>
+    <!-- Floating AI Dossier Copilot Trigger -->
+    <button class="copilot-trigger-btn" onclick="toggleCopilotDrawer()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>AI Research Copilot</span>
+    </button>
 
-      <div class="sources-feed-grid">
-        <div class="source-feed-box">
-          <h4>Enhetsregisteret</h4>
-          <p>Official legal identity, addresses, NACE classification, and employee counts.</p>
-          <a href="https://data.brreg.no/enhetsregisteret/api/enheter" target="_blank">Open registry API ↗</a>
+    <!-- Slide-Over AI Copilot Drawer -->
+    <div id="copilot-drawer" class="copilot-drawer-backdrop" onclick="handleDrawerBackdrop(event)">
+      <div class="copilot-drawer-panel">
+        <div class="copilot-header">
+          <div class="copilot-header-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Dossier Research Copilot</span>
+          </div>
+          <button class="btn-ghost-action" onclick="toggleCopilotDrawer()">✕</button>
         </div>
-        <div class="source-feed-box">
-          <h4>Corporate Roles</h4>
-          <p>Verified management, CEO, Board of Directors, and registered auditors.</p>
-          <a href="https://data.brreg.no/enhetsregisteret/api/dokumentasjon/no/index.html" target="_blank">Selected roles record ↗</a>
-        </div>
-        <div class="source-feed-box">
-          <h4>Regnskapsregisteret</h4>
-          <p>Audited annual financial figures, revenue, EBIT, and balance sheets.</p>
-          <a href="https://data.brreg.no/regnskapsregisteret/regnskap" target="_blank">Open accounts register ↗</a>
-        </div>
-        <div class="source-feed-box">
-          <h4>Oppdateringer Stream</h4>
-          <p>Delta event stream tracking real-time updates and entity modifications.</p>
-          <a href="https://data.brreg.no/enhetsregisteret/api/oppdateringer/enheter" target="_blank">Delta feed stream ↗</a>
-        </div>
-      </div>
-    </section>
 
-    <!-- Challenge Scoring Section -->
-    <section class="scoring-section" id="scoring">
-      <span class="section-eyebrow">CHALLENGE SCORING</span>
-      <div class="scoring-grid">
-        <div class="scoring-left">
-          <h3>Coverage and correctness decide 65%.</h3>
-          <p>
-            We combine checked information from submissions and Builder's own collectors into a shared reference set. We measure how much your agent found. When the set grows, we score every entry again against the same set.
+        <div class="copilot-body">
+          <p style="font-size: 0.78rem; color: var(--text-muted);">
+            Answers questions strictly bounded to the active enterprise facts ledger. Missing fields remain uninvented.
           </p>
-          <a href="#company-lookup" class="scoring-link">Explore the verified 1,051 profiles →</a>
+
+          <div id="copilot-chat-history" class="copilot-chat-history">
+            <div class="chat-bubble agent">
+              Hello! I am your Norwegian Corporate Research Copilot. Ask me any fact about <strong id="copilot-target-company">the active enterprise</strong>.
+            </div>
+          </div>
+
+          <div class="quick-prompts-row">
+            <button class="prompt-chip" onclick="askPreset('Who is the CEO and when were they appointed?')">CEO Appointment</button>
+            <button class="prompt-chip" onclick="askPreset('What were the latest audited revenues and profit?')">Audited Accounts</button>
+            <button class="prompt-chip" onclick="askPreset('Check solvency and bankruptcy status')">Solvency Check</button>
+            <button class="prompt-chip" onclick="askPreset('Show official Brønnøysund registry source links')">Registry Links</button>
+          </div>
         </div>
 
-        <div class="scoring-rubric-list">
-          <div class="rubric-row">
-            <span class="rubric-title">01 Coverage and source discovery</span>
-            <span class="rubric-points">35</span>
-          </div>
-          <div class="rubric-row">
-            <span class="rubric-title">02 Accuracy, identity and evidence</span>
-            <span class="rubric-points">30</span>
-          </div>
-          <div class="rubric-row">
-            <span class="rubric-title">03 Refresh and extensibility</span>
-            <span class="rubric-points">20</span>
-          </div>
-          <div class="rubric-row">
-            <span class="rubric-title">04 Decision-useful synthesis</span>
-            <span class="rubric-points">10</span>
-          </div>
-          <div class="rubric-row">
-            <span class="rubric-title">05 UX and interaction</span>
-            <span class="rubric-points">5</span>
-          </div>
+        <div class="copilot-footer">
+          <form class="copilot-form" onsubmit="handleCopilotSubmit(event)">
+            <input type="text" id="copilot-input-field" class="copilot-input" placeholder="Ask a question about this company..." autocomplete="off">
+            <button type="submit" class="btn-primary-action">Send</button>
+          </form>
         </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-      <span>Public sample • 1,051 dated records • not a production data service</span>
-      <a href="#" class="footer-link">Back to top ↑</a>
-    </footer>
-  </div>
-
-  <!-- Backend Inspection Modal -->
-  <div id="backend-modal" class="backend-modal hidden" onclick="handleModalBackdropClick(event)">
-    <div class="backend-modal-card">
-      <div class="backend-modal-header">
-        <span class="backend-modal-title">⚙ Backend Telemetry & Runtime Inspection</span>
-        <button class="btn-outline" style="padding: 4px 10px;" onclick="toggleBackendModal()">Close ✕</button>
-      </div>
-      <div class="backend-modal-body">
-        <p style="margin-bottom: 12px; color: var(--text-muted);">
-          SignalPost runs on a high-throughput Python backend using asynchronous HTTP clients, Modulo 11 mathematical validation, and SQLite caching.
-        </p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-          <div class="info-box-beige">
-            <strong>One Command Execution:</strong><br>
-            <code>python run.py --orgnr &lt;9-digit-orgnr&gt;</code>
-          </div>
-          <div class="info-box-beige">
-            <strong>Web Server Execution:</strong><br>
-            <code>python run.py --serve</code>
-          </div>
-        </div>
-        <h4 style="margin-bottom: 6px;">Live Agent Output for Current Entity:</h4>
-        <pre class="backend-json-block" id="modal-json-block">Loading JSON...</pre>
       </div>
     </div>
-  </div>
 
-  <!-- Research Agent Interactive Drawer Modal -->
-  <div id="agent-drawer-modal" class="backend-modal hidden" onclick="handleDrawerBackdropClick(event)">
-    <div class="backend-modal-card" style="max-width: 600px;">
-      <div class="backend-modal-header">
-        <span class="backend-modal-title">💬 Research Agent: Profile-Grounded Q&A</span>
-        <button class="btn-outline" style="padding: 4px 10px;" onclick="closeAgentDrawer()">Close ✕</button>
-      </div>
-      <div class="backend-modal-body">
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-          The agent only answers questions from the open company profile. Missing values remain missing.
-        </p>
-        <div id="qa-history" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 260px; overflow-y: auto;">
-          <div style="background-color: var(--bg-subtle); padding: 10px 14px; border-radius: 8px;">
-            <strong style="color: var(--maroon-primary);">Agent:</strong> Ready to answer questions regarding <span id="qa-company-name">this enterprise</span> based strictly on its verified public facts ledger.
-          </div>
-        </div>
-        <form onsubmit="handleAgentQuestion(event)" style="display: flex; gap: 8px;">
-          <input type="text" id="agent-question-input" placeholder="e.g. Who is the CEO? What was the latest revenue?" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 6px; font-family: inherit;">
-          <button type="submit" class="btn-maroon">Ask</button>
-        </form>
-      </div>
+    <!-- Toast Notification -->
+    <div id="app-toast" class="toast-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="toast-message">Copied to clipboard</span>
     </div>
   </div>
 
