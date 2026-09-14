@@ -391,7 +391,7 @@ http://localhost:8000/api
   - Local repository root: `e:/Hackathon/SIgnalPost`
   - GitHub Remote: `https://github.com/signalpost/norwegian-company-agent`
 - [x] **3. Exact Commit Hash**
-  - Current Git HEAD: `56f1f7e90afe7609f741eb12d2ce5ad566ab007f`
+  - Current Git HEAD: `09d5ac15e08d31851b16b52e9425e75de1db216d`
 - [x] **4. One Command to Run It**
   - ```bash
     python run.py --serve
