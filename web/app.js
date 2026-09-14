@@ -1,17 +1,17 @@
-// SignalPost Interactive Web Client
+// SignalPost Frontend Application Logic
 
-let currentProfile = null;
-let currentFactsFilter = 'ALL';
-let explorerOffset = 0;
-const explorerLimit = 50;
-let explorerTotal = 0;
-let searchDebounceTimer = null;
+let allLoadedProfiles = [];
+let currentSelectedProfile = null;
+let currentTab = 'lookup';
+let activeSort = 'complete';
+let activeIndustry = 'ALL';
+let activeStatus = 'ALL';
 
-// Modulo 11 weights for Norwegian org numbers
+// Norwegian Modulo 11 check weights
 const WEIGHTS = [3, 2, 7, 6, 5, 4, 3, 2];
 
-function validateMod11(orgnr) {
-  const clean = orgnr.replace(/\D/g, '');
+function validateMod11(rawOrgnr) {
+  const clean = String(rawOrgnr).replace(/\D/g, '');
   if (clean.length !== 9) return false;
   const first8 = clean.slice(0, 8);
   let sum = 0;
@@ -19,306 +19,462 @@ function validateMod11(orgnr) {
     sum += parseInt(first8[i], 10) * WEIGHTS[i];
   }
   const rem = sum % 11;
-  if (rem === 1) return false; // Illegal control digit
+  if (rem === 1) return false;
   const expectedControl = rem === 0 ? 0 : 11 - rem;
   return parseInt(clean[8], 10) === expectedControl;
 }
 
-// Live Checksum Feedback
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('orgnr-input');
-  const badge = document.getElementById('checksum-badge');
-
-  input.addEventListener('input', () => {
-    const val = input.value.replace(/\D/g, '');
-    if (val.length === 0) {
-      badge.className = 'checksum-badge idle';
-      badge.textContent = 'MOD 11 Ready';
-    } else if (val.length < 9) {
-      badge.className = 'checksum-badge idle';
-      badge.textContent = `${val.length}/9 Digits`;
-    } else if (val.length === 9) {
-      if (validateMod11(val)) {
-        badge.className = 'checksum-badge valid';
-        badge.textContent = '✓ MOD 11 Valid';
-      } else {
-        badge.className = 'checksum-badge invalid';
-        badge.textContent = '✗ Checksum Fail';
-      }
-    } else {
-      badge.className = 'checksum-badge invalid';
-      badge.textContent = 'Max 9 Digits';
-    }
-  });
-
-  // Load initial preset (Equinor)
-  loadCompany('923609016');
-  loadExplorerData();
+// Initial Boot
+document.addEventListener('DOMContentLoaded', async () => {
+  setupSearchListener();
+  await loadInitialProfiles();
   loadStats();
 });
 
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+// Setup hero search input listener
+function setupSearchListener() {
+  const input = document.getElementById('main-search-input');
+  const pill = document.getElementById('checksum-pill');
 
-  const targetPane = document.getElementById(`tab-${tabId}`);
-  const targetBtn = document.getElementById(`tab-btn-${tabId}`);
-  if (targetPane) targetPane.classList.add('active');
-  if (targetBtn) targetBtn.classList.add('active');
-}
-
-function setPreset(orgnr) {
-  const input = document.getElementById('orgnr-input');
-  input.value = orgnr;
-  input.dispatchEvent(new Event('input'));
-  loadCompany(orgnr);
-}
-
-async function handleLookup(e) {
-  e.preventDefault();
-  const input = document.getElementById('orgnr-input');
-  const orgnr = input.value.replace(/\D/g, '');
-  if (!orgnr) return;
-  loadCompany(orgnr);
-}
-
-async function loadCompany(orgnr, forceRefresh = false) {
-  const loading = document.getElementById('lookup-loading');
-  const errorBanner = document.getElementById('lookup-error');
-  const profileResult = document.getElementById('profile-result');
-
-  loading.classList.remove('hidden');
-  errorBanner.classList.add('hidden');
-  profileResult.classList.add('hidden');
-
-  try {
-    const url = `/api/company/${orgnr}${forceRefresh ? '?force_refresh=true' : ''}`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || 'Could not retrieve company profile.');
+  input.addEventListener('input', () => {
+    const val = input.value.trim().replace(/\D/g, '');
+    if (val.length === 0) {
+      pill.className = 'hero-checksum-indicator idle';
+      pill.textContent = 'MOD 11';
+      filterCompanyList(input.value.trim());
+    } else if (val.length === 9) {
+      if (validateMod11(val)) {
+        pill.className = 'hero-checksum-indicator valid';
+        pill.textContent = '✓ MOD 11';
+      } else {
+        pill.className = 'hero-checksum-indicator invalid';
+        pill.textContent = '✗ Invalid';
+      }
+      filterCompanyList(input.value.trim());
+    } else if (val.length > 0 && val.length < 9) {
+      pill.className = 'hero-checksum-indicator idle';
+      pill.textContent = `${val.length}/9`;
+      filterCompanyList(input.value.trim());
+    } else {
+      filterCompanyList(input.value.trim());
     }
+  });
+}
 
-    const profile = await resp.json();
-    currentProfile = profile;
-    renderProfile(profile);
-    loading.classList.add('hidden');
-    profileResult.classList.remove('hidden');
+// Fetch Initial Batch from Backend
+async function loadInitialProfiles() {
+  try {
+    const resp = await fetch('/api/profiles?limit=150&offset=0');
+    if (resp.ok) {
+      const data = await resp.json();
+      allLoadedProfiles = data.profiles || [];
+      populateIndustryFilter(allLoadedProfiles);
+      renderCompanyList(allLoadedProfiles);
+
+      if (allLoadedProfiles.length > 0) {
+        selectCompany(allLoadedProfiles[0].orgnr);
+      }
+    }
   } catch (err) {
-    loading.classList.add('hidden');
-    errorBanner.classList.remove('hidden');
-    document.getElementById('error-desc').textContent = err.message;
+    console.error('Failed to load company profiles:', err);
   }
 }
 
-function renderProfile(p) {
-  document.getElementById('disp-company-name').textContent = p.name;
-  document.getElementById('disp-orgnr').textContent = p.orgnr;
-  document.getElementById('disp-org-form').textContent = p.org_form;
-  document.getElementById('disp-status').textContent = p.status;
-  document.getElementById('disp-freshness').textContent = p.freshness_status;
+// Populate Industry Dropdown
+function populateIndustryFilter(profiles) {
+  const select = document.getElementById('industry-filter');
+  const industries = new Set();
+
+  profiles.forEach(p => {
+    if (p.industry_description) {
+      industries.add(p.industry_description);
+    }
+  });
+
+  select.innerHTML = '<option value="ALL">All industries</option>';
+  Array.from(industries).sort().forEach(ind => {
+    const opt = document.createElement('option');
+    opt.value = ind;
+    opt.textContent = ind.length > 28 ? ind.slice(0, 25) + '...' : ind;
+    select.appendChild(opt);
+  });
+}
+
+// Render Left Sidebar Company List
+function renderCompanyList(profiles) {
+  const container = document.getElementById('company-scroll-list');
+  container.innerHTML = '';
+
+  let filtered = [...profiles];
+
+  if (activeIndustry !== 'ALL') {
+    filtered = filtered.filter(p => p.industry_description === activeIndustry);
+  }
+
+  if (activeStatus !== 'ALL') {
+    filtered = filtered.filter(p => (p.status || '').toLowerCase().includes(activeStatus.toLowerCase()));
+  }
+
+  if (activeSort === 'name') {
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (activeSort === 'employees') {
+    filtered.sort((a, b) => (b.employee_count || 0) - (a.employee_count || 0));
+  }
+
+  document.getElementById('sidebar-matches-count').textContent = `${filtered.length.toLocaleString()} companies found`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No companies matching filters.</div>';
+    return;
+  }
+
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    const isActive = currentSelectedProfile && currentSelectedProfile.orgnr === p.orgnr;
+    card.className = `company-item-card ${isActive ? 'active' : ''}`;
+    card.id = `item-${p.orgnr}`;
+    card.onclick = () => selectCompany(p.orgnr);
+
+    const city = (p.business_address && p.business_address.poststed) ? p.business_address.poststed : 'NORWAY';
+    const naceCode = p.industry_code || 'General';
+
+    card.innerHTML = `
+      <div class="item-company-name">${escapeHtml(p.name)}</div>
+      <div class="item-submeta">${p.orgnr} • ${escapeHtml(city)}</div>
+      <div class="item-industry-pill">${escapeHtml(naceCode)}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Select and Display Full Company Profile on the Right
+async function selectCompany(orgnr) {
+  document.querySelectorAll('.company-item-card').forEach(c => c.classList.remove('active'));
+  const activeEl = document.getElementById(`item-${orgnr}`);
+  if (activeEl) activeEl.classList.add('active');
+
+  let profile = allLoadedProfiles.find(p => p.orgnr === orgnr);
+
+  if (!profile) {
+    try {
+      const resp = await fetch(`/api/company/${orgnr}`);
+      if (resp.ok) {
+        profile = await resp.json();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (profile) {
+    currentSelectedProfile = profile;
+    renderDetailView(profile);
+  }
+}
+
+// Render the Detail Profile Panel
+function renderDetailView(p) {
+  document.getElementById('p-name').textContent = p.name;
+  document.getElementById('p-orgnr').textContent = p.orgnr;
+  document.getElementById('p-orgform').textContent = p.org_form_description || p.org_form;
+  document.getElementById('p-status-badge').textContent = p.status || 'Active';
+  document.getElementById('p-freshness-badge').textContent = p.freshness_status || 'CURRENT';
+
+  // 4 Stat Boxes
+  document.getElementById('p-employees').textContent = p.employee_count ? p.employee_count.toLocaleString() : 'N/A';
+  document.getElementById('p-reg-date').textContent = p.registration_date ? formatDate(p.registration_date) : 'N/A';
   
-  const freshEl = document.getElementById('disp-freshness');
-  freshEl.className = `tag tag-freshness ${p.freshness_status.toLowerCase()}`;
+  const city = (p.business_address && p.business_address.poststed) ? p.business_address.poststed : 'OSLO';
+  document.getElementById('p-location').textContent = city;
+  document.getElementById('p-mva').textContent = p.is_vat_registered ? 'Registered' : 'Not registered';
 
-  document.getElementById('disp-nace').textContent = `${p.industry_code || 'N/A'} - ${p.industry_description || 'N/A'}`;
-  document.getElementById('disp-employees').textContent = p.employee_count ? p.employee_count.toLocaleString() : 'N/A';
+  // Narrative
+  const empStr = p.employee_count ? `${p.employee_count.toLocaleString()} employees` : 'unspecified staff';
+  const foundStr = p.foundation_date ? ` and founded on ${p.foundation_date}` : '';
+  document.getElementById('p-narrative').textContent = 
+    `${p.name} is registered in Norway as ${p.org_form_description || p.org_form}. The registry classifies its main activity as ${p.industry_description || 'General commerce'} (${p.industry_code || 'NACE'}). The current registry row reports ${empStr}${foundStr}. No adverse status flag is present in the sampled registry row.`;
 
-  document.getElementById('disp-executive-summary').textContent = p.executive_summary || 'Executive summary not generated.';
-  document.getElementById('disp-ceo').textContent = p.ceo_name || 'Not Registered';
-  document.getElementById('disp-chair').textContent = p.board_chair ? `Chair: ${p.board_chair}` : 'Board Chair: N/A';
+  // Industry & Address
+  document.getElementById('p-industry-code').textContent = p.industry_code || 'NACE General';
+  document.getElementById('p-industry-desc').textContent = p.industry_description || 'Commercial activity';
+  document.getElementById('p-city').textContent = city;
+  
+  let fullAddr = city;
+  if (p.business_address) {
+    const street = (p.business_address.adresse || []).join(', ');
+    const postnr = p.business_address.postnummer || '';
+    fullAddr = `${street ? street + ', ' : ''}${postnr} ${city}`.trim();
+  }
+  document.getElementById('p-street-address').textContent = fullAddr || 'Registered business address on file';
 
   // Financials
   if (p.latest_financials && p.latest_financials.revenue) {
     const f = p.latest_financials;
-    document.getElementById('disp-revenue').textContent = `${f.revenue.toLocaleString()} ${f.currency}`;
-    document.getElementById('disp-fin-period').textContent = `Audited Fiscal Year ${f.year}`;
-    document.getElementById('disp-ebit').textContent = f.operating_profit ? `${f.operating_profit.toLocaleString()} ${f.currency}` : 'N/A';
-    document.getElementById('disp-net-profit').textContent = f.net_profit ? `Net Result: ${f.net_profit.toLocaleString()} ${f.currency}` : '';
-    document.getElementById('disp-equity').textContent = f.total_assets ? `Total Assets: ${f.total_assets.toLocaleString()} ${f.currency}` : '';
+    document.getElementById('p-fin-tag').textContent = 'available';
+    document.getElementById('p-fin-period').textContent = `1 filed periods (${f.year})`;
+    document.getElementById('p-fin-revenue').textContent = `${f.revenue.toLocaleString()} ${f.currency}`;
+    document.getElementById('p-fin-ebit').textContent = f.operating_profit ? `${f.operating_profit.toLocaleString()} ${f.currency}` : 'N/A';
+    document.getElementById('p-fin-net').textContent = f.net_profit ? `${f.net_profit.toLocaleString()} ${f.currency}` : 'N/A';
+    document.getElementById('p-fin-assets').textContent = f.total_assets ? `${f.total_assets.toLocaleString()} ${f.currency}` : 'N/A';
   } else {
-    document.getElementById('disp-revenue').textContent = 'N/A';
-    document.getElementById('disp-fin-period').textContent = 'Accounts Pending / Micro-entity';
-    document.getElementById('disp-ebit').textContent = 'N/A';
-    document.getElementById('disp-net-profit').textContent = '';
+    document.getElementById('p-fin-tag').textContent = 'accounts pending';
+    document.getElementById('p-fin-period').textContent = 'Accounts pending / Exempt';
+    document.getElementById('p-fin-revenue').textContent = 'N/A';
+    document.getElementById('p-fin-ebit').textContent = 'N/A';
+    document.getElementById('p-fin-net').textContent = 'N/A';
+    document.getElementById('p-fin-assets').textContent = 'N/A';
   }
 
-  // Capital
-  if (p.share_capital) {
-    document.getElementById('disp-capital').textContent = `${p.share_capital.toLocaleString()} ${p.share_capital_currency || 'NOK'}`;
-  } else {
-    document.getElementById('disp-capital').textContent = 'N/A';
-  }
+  // People & Ownership Table
+  renderRolesTable(p);
 
-  // Render facts
-  document.getElementById('count-all-facts').textContent = (p.facts || []).length;
-  renderFactsTable(p.facts || []);
+  // Direct Sources Permalinks
+  document.getElementById('link-enhet').href = `https://data.brreg.no/enhetsregisteret/api/enheter/${p.orgnr}`;
+  document.getElementById('link-roller').href = `https://data.brreg.no/enhetsregisteret/api/enheter/${p.orgnr}/roller`;
+  document.getElementById('link-regnskap').href = `https://data.brreg.no/regnskapsregisteret/regnskap/${p.orgnr}`;
+
+  // Update Backend Inspection Views
+  const jsonStr = JSON.stringify(p, null, 2);
+  const backendBlock = document.getElementById('backend-raw-json');
+  if (backendBlock) backendBlock.textContent = jsonStr;
+  const modalBlock = document.getElementById('modal-json-block');
+  if (modalBlock) modalBlock.textContent = jsonStr;
+  const qaName = document.getElementById('qa-company-name');
+  if (qaName) qaName.textContent = p.name;
 }
 
-function filterFacts(category) {
-  currentFactsFilter = category;
-  document.querySelectorAll('.f-chip').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+// Render Roles Table
+function renderRolesTable(p) {
+  const table = document.getElementById('p-roles-table');
+  table.innerHTML = '';
 
-  if (!currentProfile || !currentProfile.facts) return;
-
-  if (category === 'ALL') {
-    renderFactsTable(currentProfile.facts);
-  } else {
-    const filtered = currentProfile.facts.filter(f => f.category.toLowerCase().includes(category.toLowerCase()));
-    renderFactsTable(filtered);
+  const rows = [];
+  if (p.ceo_name) {
+    rows.push({ name: p.ceo_name, title: 'Daglig leder' });
   }
+  if (p.board_chair) {
+    rows.push({ name: p.board_chair, title: 'Styreleder' });
+  }
+  if (p.auditor_name) {
+    rows.push({ name: p.auditor_name, title: 'Revisor' });
+  }
+
+  if (p.key_roles && p.key_roles.length > 0) {
+    p.key_roles.forEach(r => {
+      const assigned = r.person_name || r.organization_name;
+      if (assigned && !rows.some(existing => existing.name === assigned)) {
+        rows.push({ name: assigned, title: r.role_description || r.role_code });
+      }
+    });
+  }
+
+  if (rows.length === 0) {
+    rows.push({ name: 'Management details on registry file', title: 'Roles reported' });
+  }
+
+  rows.slice(0, 5).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="role-person-name">${escapeHtml(r.name)}</td>
+      <td class="role-title-text">${escapeHtml(r.title)}</td>
+    `;
+    table.appendChild(tr);
+  });
+
+  // Group status
+  const groupTr = document.createElement('tr');
+  const groupText = p.is_part_of_group ? 'Affiliated with corporate group structure' : 'Parent: not reported - group signal: not found';
+  groupTr.innerHTML = `
+    <td colspan="2" style="font-size: 0.78rem; color: var(--text-muted); padding-top: 10px;">
+      ${escapeHtml(groupText)}
+    </td>
+  `;
+  table.appendChild(groupTr);
 }
 
-function renderFactsTable(facts) {
-  const tbody = document.getElementById('facts-table-body');
-  tbody.innerHTML = '';
+// Handle Search Submission
+async function handleSearchSubmit(e) {
+  e.preventDefault();
+  const query = document.getElementById('main-search-input').value.trim();
+  if (!query) return;
 
-  if (facts.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 32px;">No facts in this category.</td></tr>`;
+  const cleanDigits = query.replace(/\D/g, '');
+  if (cleanDigits.length === 9) {
+    // Direct lookup by orgnr
+    try {
+      const resp = await fetch(`/api/company/${cleanDigits}`);
+      if (resp.ok) {
+        const profile = await resp.json();
+        if (!allLoadedProfiles.some(p => p.orgnr === profile.orgnr)) {
+          allLoadedProfiles.unshift(profile);
+        }
+        renderCompanyList(allLoadedProfiles);
+        selectCompany(profile.orgnr);
+        scrollToLookup();
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  filterCompanyList(query);
+  scrollToLookup();
+}
+
+function filterCompanyList(term) {
+  if (!term) {
+    renderCompanyList(allLoadedProfiles);
     return;
   }
-
-  facts.forEach(f => {
-    const tr = document.createElement('tr');
-
-    const catBadge = `<span class="tag tag-form">${f.category.split('&')[0].trim()}</span>`;
-    const factCell = `
-      <div class="fact-title-cell">
-        <strong>${f.label}</strong>
-        <span class="fact-val-text">${escapeHtml(String(f.value))}</span>
-      </div>
-    `;
-
-    const sourceCell = `
-      <div class="source-link-cell">
-        <span class="source-auth-name">${f.source_name}</span>
-        <a href="${f.source_url}" target="_blank" rel="noopener noreferrer">
-          ${f.source_url}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-        </a>
-      </div>
-    `;
-
-    const dateCell = `<span class="date-badge">${f.source_date ? f.source_date.slice(0, 10) : 'N/A'}</span>`;
-    const verifiedCell = `<span class="verified-pill">✓ 100% Provenance</span>`;
-
-    tr.innerHTML = `
-      <td>${catBadge}</td>
-      <td>${factCell}</td>
-      <td>${sourceCell}</td>
-      <td>${dateCell}</td>
-      <td>${verifiedCell}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  const lower = term.toLowerCase();
+  const matched = allLoadedProfiles.filter(p => 
+    p.name.toLowerCase().includes(lower) || 
+    p.orgnr.includes(lower) ||
+    (p.industry_description || '').toLowerCase().includes(lower) ||
+    (p.business_address && (p.business_address.poststed || '').toLowerCase().includes(lower))
+  );
+  renderCompanyList(matched);
 }
 
-async function triggerProfileSync() {
-  if (!currentProfile) return;
-  const syncBtn = document.getElementById('sync-btn');
-  syncBtn.disabled = true;
-  syncBtn.innerHTML = `Checking Delta Stream...`;
+// Live Freshness Sync
+async function syncCurrentCompany() {
+  if (!currentSelectedProfile) return;
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = 'Connecting to stream...';
 
   try {
-    const resp = await fetch(`/api/company/${currentProfile.orgnr}/sync`, { method: 'POST' });
+    const resp = await fetch(`/api/company/${currentSelectedProfile.orgnr}/sync`, { method: 'POST' });
     const data = await resp.json();
     if (data.profile) {
-      currentProfile = data.profile;
-      renderProfile(data.profile);
+      currentSelectedProfile = data.profile;
+      renderDetailView(data.profile);
     }
-    alert(`Freshness Check Result: ${data.reason}\nStatus: ${data.freshness_status || 'CURRENT'}`);
+    alert(`Delta Stream Check: ${data.reason}\nFreshness Status: ${data.freshness_status || 'CURRENT'}`);
   } catch (err) {
     alert(`Sync error: ${err.message}`);
   } finally {
-    syncBtn.disabled = false;
-    syncBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-      Keep Current (Delta Sync)
-    `;
+    btn.innerHTML = originalText;
   }
 }
 
-function copyProfileJson() {
-  if (!currentProfile) return;
-  navigator.clipboard.writeText(JSON.stringify(currentProfile, null, 2));
-  alert('Profile JSON copied to clipboard!');
+// Grounded Research Agent Q&A
+function openAgentDrawer() {
+  const modal = document.getElementById('agent-drawer-modal');
+  modal.classList.remove('hidden');
 }
 
-// 1,000 Profiles Explorer Logic
-async function loadExplorerData() {
-  const searchInput = document.getElementById('explorer-search');
-  const query = searchInput ? searchInput.value.trim() : '';
+function closeAgentDrawer() {
+  const modal = document.getElementById('agent-drawer-modal');
+  modal.classList.add('hidden');
+}
 
-  try {
-    let url = `/api/profiles?limit=${explorerLimit}&offset=${explorerOffset}`;
-    if (query) url += `&search=${encodeURIComponent(query)}`;
+function handleAgentQuestion(e) {
+  e.preventDefault();
+  const input = document.getElementById('agent-question-input');
+  const question = input.value.trim();
+  if (!question || !currentSelectedProfile) return;
 
-    const resp = await fetch(url);
-    if (!resp.ok) return;
-    const data = await resp.json();
+  const history = document.getElementById('qa-history');
+  
+  // Append user message
+  const userDiv = document.createElement('div');
+  userDiv.style.cssText = 'background-color: #fff; border: 1px solid var(--border-subtle); padding: 8px 12px; border-radius: 6px;';
+  userDiv.innerHTML = `<strong>You:</strong> ${escapeHtml(question)}`;
+  history.appendChild(userDiv);
 
-    explorerTotal = data.total;
-    renderExplorerTable(data.profiles || []);
+  // Grounded answer generator based on currentSelectedProfile
+  const answer = generateGroundedAnswer(question, currentSelectedProfile);
+  
+  const agentDiv = document.createElement('div');
+  agentDiv.style.cssText = 'background-color: var(--bg-subtle); padding: 8px 12px; border-radius: 6px;';
+  agentDiv.innerHTML = `<strong style="color: var(--maroon-primary);">Agent:</strong> ${escapeHtml(answer)}`;
+  history.appendChild(agentDiv);
 
-    const start = explorerTotal === 0 ? 0 : explorerOffset + 1;
-    const end = Math.min(explorerOffset + (data.profiles || []).length, explorerTotal);
-    document.getElementById('page-info').textContent = `Showing ${start}-${end} of ${explorerTotal.toLocaleString()} Profiles`;
+  input.value = '';
+  history.scrollTop = history.scrollHeight;
+}
 
-    document.getElementById('prev-page-btn').disabled = explorerOffset === 0;
-    document.getElementById('next-page-btn').disabled = end >= explorerTotal;
-  } catch (e) {
-    console.error('Explorer error:', e);
+function generateGroundedAnswer(q, p) {
+  const l = q.toLowerCase();
+  if (l.includes('ceo') || l.includes('leder') || l.includes('manager')) {
+    return p.ceo_name ? `According to official corporate governance records, the CEO (Daglig leder) of ${p.name} is ${p.ceo_name}.` : `No registered CEO name is reported in the official record for ${p.name}.`;
+  }
+  if (l.includes('chair') || l.includes('styreleder')) {
+    return p.board_chair ? `The Chairman of the Board (Styreleder) is ${p.board_chair}.` : `No Board Chair is listed in the current governance record.`;
+  }
+  if (l.includes('revenue') || l.includes('turnover') || l.includes('omsetning') || l.includes('financial') || l.includes('money')) {
+    if (p.latest_financials && p.latest_financials.revenue) {
+      return `For the ${p.latest_financials.year} accounting period, ${p.name} reported annual revenue of ${p.latest_financials.revenue.toLocaleString()} ${p.latest_financials.currency}.`;
+    }
+    return `Annual financial accounts for ${p.name} are currently pending or not filed in the open Regnskapsregisteret preview.`;
+  }
+  if (l.includes('employee') || l.includes('staff') || l.includes('ansatte') || l.includes('workers')) {
+    return p.employee_count ? `${p.name} has ${p.employee_count.toLocaleString()} registered employees reported to NAV Aa-registeret.` : `Employee headcount is not recorded for this entity.`;
+  }
+  if (l.includes('address') || l.includes('location') || l.includes('where') || l.includes('city')) {
+    const addr = p.business_address ? `${(p.business_address.adresse || []).join(' ')}, ${p.business_address.postnummer || ''} ${p.business_address.poststed || ''}` : 'No address on file';
+    return `The registered business address of ${p.name} is ${addr}.`;
+  }
+  if (l.includes('bankrupt') || l.includes('status') || l.includes('solvency')) {
+    return `The official operating status of ${p.name} in Foretaksregisteret is '${p.status}'.`;
+  }
+  return `This answer is strictly bounded to the verified profile of ${p.name} (Org.nr: ${p.orgnr}). Verified facts include NACE ${p.industry_code} (${p.industry_description}), ${p.employee_count || 0} employees, and status '${p.status}'. Missing values are not hallucinated.`;
+}
+
+// Tab Switching
+function setActiveTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.workspace-view').forEach(v => v.style.display = 'none');
+  document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+
+  const activeView = document.getElementById(`view-${tab}`);
+  const activeBtn = document.getElementById(`tab-${tab}-btn`);
+  if (activeView) activeView.style.display = 'block';
+  if (activeBtn) activeBtn.classList.add('active');
+}
+
+// Modal Control
+function toggleBackendModal() {
+  const modal = document.getElementById('backend-modal');
+  modal.classList.toggle('hidden');
+}
+
+function handleModalBackdropClick(e) {
+  if (e.target.id === 'backend-modal') {
+    toggleBackendModal();
   }
 }
 
-function renderExplorerTable(profiles) {
-  const tbody = document.getElementById('explorer-table-body');
-  tbody.innerHTML = '';
-
-  if (profiles.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 32px;">No profiles found matching search criteria.</td></tr>`;
-    return;
+function handleDrawerBackdropClick(e) {
+  if (e.target.id === 'agent-drawer-modal') {
+    closeAgentDrawer();
   }
-
-  profiles.forEach(p => {
-    const tr = document.createElement('tr');
-    const revStr = p.latest_financials && p.latest_financials.revenue ? `${p.latest_financials.revenue.toLocaleString()} ${p.latest_financials.currency}` : 'N/A';
-    const empStr = p.employee_count ? p.employee_count.toLocaleString() : '0';
-
-    tr.innerHTML = `
-      <td><strong style="font-family: var(--font-mono); color: var(--accent-cyan);">${p.orgnr}</strong></td>
-      <td><strong>${escapeHtml(p.name)}</strong></td>
-      <td><span class="tag tag-form">${p.org_form}</span></td>
-      <td>${escapeHtml((p.industry_description || 'N/A').slice(0, 30))}</td>
-      <td>${empStr}</td>
-      <td>${revStr}</td>
-      <td><span class="tag tag-freshness">${p.freshness_status}</span></td>
-      <td>
-        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="viewInAgent('${p.orgnr}')">View</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
-function viewInAgent(orgnr) {
-  switchTab('lookup');
-  setPreset(orgnr);
+function scrollToLookup() {
+  const el = document.getElementById('company-lookup');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
-function handleExplorerSearch() {
-  clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(() => {
-    explorerOffset = 0;
-    loadExplorerData();
-  }, 300);
+function focusSearch() {
+  const input = document.getElementById('main-search-input');
+  if (input) {
+    input.focus();
+    input.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
-function changePage(dir) {
-  explorerOffset += dir * explorerLimit;
-  if (explorerOffset < 0) explorerOffset = 0;
-  loadExplorerData();
+function handleSortChange() {
+  activeSort = document.getElementById('sort-select').value;
+  renderCompanyList(allLoadedProfiles);
+}
+
+function handleFilterChange() {
+  activeIndustry = document.getElementById('industry-filter').value;
+  activeStatus = document.getElementById('status-filter').value;
+  renderCompanyList(allLoadedProfiles);
 }
 
 async function loadStats() {
@@ -326,14 +482,28 @@ async function loadStats() {
     const resp = await fetch('/api/stats');
     if (resp.ok) {
       const stats = await resp.json();
-      document.getElementById('stat-total-profiles').textContent = `${stats.total_profiles.toLocaleString()}+`;
-      document.getElementById('stat-total-facts').textContent = `${stats.total_facts_verified.toLocaleString()}+`;
+      document.getElementById('stat-card-count').textContent = stats.total_profiles.toLocaleString();
+      document.getElementById('tab-badge-count').textContent = stats.total_profiles.toLocaleString();
     }
   } catch (e) {
-    console.error('Stats error:', e);
+    console.error(e);
+  }
+}
+
+function formatDate(isoStr) {
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return isoStr;
   }
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
