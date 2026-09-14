@@ -124,7 +124,117 @@ def get_stats():
             "Brønnøysundregistrene (Regnskapsregisteret)",
             "Brønnøysundregistrene (Oppdateringer Stream)",
             "Official Company Domains & Web Presence",
+            "Apify Real-Time Actor Crawler",
         ],
+    }
+
+
+@app.get("/api/apify/search")
+def apify_search(query: str = Query(..., min_length=1)):
+    """
+    Search and enrich company data using the Apify actor source
+    alongside pre-harvested Brønnøysundregistrene data.
+    """
+    from signalpost.sources.apify_source import ApifyCompanySource
+
+    clean_query = query.strip()
+    digits_only = "".join(filter(str.isdigit, clean_query))
+
+    matched_profile = None
+    if len(digits_only) == 9:
+        is_valid, _ = validate_norwegian_orgnr(digits_only)
+        if is_valid:
+            matched_profile = storage.get_profile(digits_only)
+            if not matched_profile:
+                ok, prof, _ = agent.process_orgnr(digits_only)
+                if ok and prof:
+                    storage.save_profile(prof)
+                    matched_profile = prof
+
+    if not matched_profile:
+        matches = storage.list_profiles(limit=5, search=clean_query)
+        if matches:
+            matched_profile = matches[0]
+
+    apify_source = ApifyCompanySource()
+    actor_results = apify_source.fetch_company_realtime(clean_query)
+
+    return {
+        "query": clean_query,
+        "matched_profile": matched_profile,
+        "apify_actor_id": apify_source.actor_id,
+        "apify_results": actor_results,
+        "status": "success",
+    }
+
+
+@app.post("/api/agent/query")
+def agent_query(payload: dict):
+    """
+    Direct Q&A Copilot answering queries grounded in the official company facts.
+    """
+    orgnr = payload.get("orgnr", "").strip()
+    question = payload.get("question", "").strip()
+
+    if not orgnr or not question:
+        raise HTTPException(status_code=400, detail="Both 'orgnr' and 'question' are required.")
+
+    profile = storage.get_profile(orgnr)
+    if not profile:
+        ok, profile, msg = agent.process_orgnr(orgnr)
+        if not ok or not profile:
+            raise HTTPException(status_code=404, detail=f"Company {orgnr} not found.")
+
+    q_lower = question.lower()
+    answer = ""
+    citations = []
+
+    if any(w in q_lower for w in ["ceo", "daglig", "manager", "leader"]):
+        ceo = profile.ceo_name or "Not registered"
+        answer = f"The Chief Executive Officer (Daglig Leder) of {profile.name} is {ceo}."
+        citations.append({"source": "Brønnøysundregistrene (Roller)", "key": "ceo", "value": ceo})
+    elif any(w in q_lower for w in ["chair", "board", "styreleder"]):
+        chair = profile.board_chair or "Not registered"
+        answer = f"The Board Chair (Styreleder) of {profile.name} is {chair}."
+        citations.append({"source": "Brønnøysundregistrene (Roller)", "key": "board_chair", "value": chair})
+    elif any(w in q_lower for w in ["revenue", "turnover", "profit", "ebit", "financial", "accounts"]):
+        if profile.latest_financials and profile.latest_financials.revenue:
+            f = profile.latest_financials
+            answer = (
+                f"For the audited fiscal year {f.year}, {profile.name} reported turnover/revenue of "
+                f"{f.revenue:,.0f} {f.currency}, operating profit (EBIT) of {f.operating_profit:,.0f} {f.currency}, "
+                f"and total equity of {f.total_equity:,.0f} {f.currency}."
+            )
+            citations.append({"source": "Brønnøysundregistrene (Regnskapsregisteret)", "year": f.year})
+        else:
+            answer = f"Audited annual financial statements for {profile.name} are pending filing in Regnskapsregisteret."
+    elif any(w in q_lower for w in ["employee", "staff", "workers", "headcount"]):
+        cnt = profile.employee_count or 0
+        answer = f"{profile.name} has {cnt:,} registered employees according to the Norwegian State Register of Employers and Employees (Aa-registeret / NAV)."
+        citations.append({"source": "NAV / Aa-registeret via Enhetsregisteret", "count": cnt})
+    elif any(w in q_lower for w in ["vat", "mva", "tax"]):
+        vat_str = "is registered for VAT (Merverdiavgiftsregisteret)" if profile.is_vat_registered else "is not currently registered for VAT / MVA"
+        answer = f"{profile.name} {vat_str}."
+        citations.append({"source": "Skatteetaten / Enhetsregisteret", "is_vat_registered": profile.is_vat_registered})
+    elif any(w in q_lower for w in ["address", "location", "city", "where"]):
+        addr = profile.business_address
+        if addr:
+            answer = f"{profile.name} is officially registered at {addr.adresse or ''}, {addr.postnummer or ''} {addr.poststed or ''}, Norway."
+        else:
+            answer = f"Registered address for {profile.name} is on file in Brønnøysundregistrene."
+        citations.append({"source": "Brønnøysundregistrene Enhetsregisteret"})
+    else:
+        # High precision synthesis fallback
+        answer = agent.ai.synthesize(profile)
+        citations.append({"source": "SignalPost AI Synthesizer & Multi-Registry Grounding Engine"})
+
+    return {
+        "orgnr": orgnr,
+        "company_name": profile.name,
+        "question": question,
+        "answer": answer,
+        "citations": citations,
+        "freshness_status": profile.freshness_status,
     }
 
 
