@@ -146,7 +146,27 @@ def run_batch_generation(count: int = 1000):
 
 
 def run_server(port: int = 8000):
+    import socket
     import uvicorn
+
+    def is_port_in_use(p: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(('0.0.0.0', p))
+                return False
+            except OSError:
+                return True
+
+    target_port = port
+    if is_port_in_use(target_port):
+        print(f"[!] Warning: Port {target_port} is occupied by another process.")
+        for alt in range(target_port + 1, target_port + 10):
+            if not is_port_in_use(alt):
+                print(f"[*] Falling back to available port http://localhost:{alt}")
+                target_port = alt
+                break
+
     print_banner()
-    print(f"[*] Starting SignalPost Web Dashboard & REST API on http://localhost:{port}")
-    uvicorn.run("signalpost.api:app", host="0.0.0.0", port=port, reload=False)
+    print(f"[*] Starting SignalPost Web Dashboard & REST API on http://localhost:{target_port}")
+    uvicorn.run("signalpost.api:app", host="0.0.0.0", port=target_port, reload=False)
+
