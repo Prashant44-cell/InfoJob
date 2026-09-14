@@ -403,7 +403,7 @@ Base URL: `http://127.0.0.1:8000/api`
   - Local Path: `e:/Hackathon/SIgnalPost`
   - GitHub Remote: `https://github.com/signalpost/norwegian-company-agent`
 - [x] **3. Exact Commit Hash**
-  - Current Git HEAD: `2a52fdb1d35e788f2050d89527ffc89ba5515c89`
+  - Current Git HEAD: `5b99e6e3620292102999df322828e8793599214a`
 - [x] **4. One Command to Run It**
   - ```bash
     python run.py --serve
