@@ -32,7 +32,7 @@ graph TD
 
     subgraph Data [Persistent Layer]
         DB[(data/company_profiles.db: SQLite)]
-        JSON[data/profiles_1000.json: 1,051 Profiles]
+        JSON[data/profiles_1000.json: 1,054 Profiles]
         JSONL[data/profiles_1000.jsonl: Stream JSON]
         CSV[data/profiles_1000_summary.csv: Metrics]
     end
@@ -66,7 +66,7 @@ graph TD
     "oppdateringer": {"endpoint": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/enheter", "output": "update_id, timestamp, delta_events"},
     "entity_resolver": {"rules": ["orgnr_primary_key_invariance", "levenshtein_name_similarity>=0.82", "historical_name_matching"]},
     "syncer": {"evaluates": ["latest_update_id > cached_id", "registry_timestamp > cached_timestamp", "ttl_hours=48"]},
-    "dataset": {"records": 1051, "facts": 11216, "formats": ["json", "jsonl", "csv", "db"]}
+    "dataset": {"records": 1054, "facts": 11837, "formats": ["json", "jsonl", "csv", "db"]}
   },
   "edges": [
     ["run.py", "CALLS", "SignalPostAgent"],

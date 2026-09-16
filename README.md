@@ -3,8 +3,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57.svg)](https://www.sqlite.org/)
-[![Profiles Indexed](https://img.shields.io/badge/Profiles-1%2C051%20Harvested-success.svg)](#-submission-deliverables-checklist)
-[![Verified Facts](https://img.shields.io/badge/Facts-11%2C200%2B%20Grounded-brightgreen.svg)](#-submission-deliverables-checklist)
+[![Profiles Indexed](https://img.shields.io/badge/Profiles-1%2C054%20Harvested-success.svg)](#-submission-deliverables-checklist)
+[![Verified Facts](https://img.shields.io/badge/Facts-11%2C800%2B%20Grounded-brightgreen.svg)](#-submission-deliverables-checklist)
 [![Modulo-11](https://img.shields.io/badge/Checksum-Modulo--11%20Verified-emerald.svg)](#-key-features)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20NLOD%202.0-orange.svg)](#-license)
 [![Architecture Graph](https://img.shields.io/badge/%2Fgraphify-Token--Optimized-purple.svg)](GRAPH.md)
@@ -45,9 +45,9 @@
 1. **Validates via Modulo-11**: Executes official Norwegian Modulo-11 arithmetic checksum validation against weights `[3, 2, 7, 6, 5, 4, 3, 2]` before touching the network.
 2. **Harvests Permitted Public Sources**: Pulls sovereign enterprise data from Brønnøysundregistrene (*Enhetsregisteret*, *Roller & Styre*, *Regnskapsregisteret*) and Apify real-time actor crawlers under the Norwegian Licence for Open Government Data (NLOD 2.0).
 3. **Disambiguates Entities**: Resolves parent-subsidiary hierarchies, foundation dates, and company names to ensure every extracted fact belongs strictly to the target company.
-4. **Anchors Provenance**: Pairs every single fact with an immutable audit trail, official permalink, publication date, and confidence level.
+4. **Anchors Provenance**: Pairs every single fact with an immutable audit trail, official human-readable web portal links, publication date, and confidence level.
 5. **Tracks Delta Streams**: Continually listens to the live Brønnøysund update stream (*Oppdateringer*) to instantly flag records as `CURRENT` or `STALE`.
-6. **Separates Layout & Backend**: Features a clean modern UI faithful to a modular wireframe blueprint, with full backend connectivity and smooth scrolling for extensive details.
+6. **Separates Layout & Backend**: Features a clean modern UI faithful to a modular wireframe blueprint, with full backend connectivity, high-contrast visibility, and smooth scrolling for extensive details.
 
 ---
 
@@ -59,8 +59,8 @@ The dashboard implements the exact layout specified in the project wireframe blu
 +---------------------------------------------------------------------------------------------------------------+
 | +-----------------------------------------------------------------------------------------------------------+ |
 | | +--------------------+   +---------------------------------------------+   +----------------------------+ | |
-| | | Project name:      |   | Top Navbar (Dashboard, Company Profiles,    |   | Theme Switcher &           | | |
-| | | InfoJob            |   | Research/Search, Insights, Settings)        |   | Havnegata 48... Address    | | |
+| | | Project name:      |   | Top Navbar (Individual Color Coding:        |   | Theme Switcher &           | | |
+| | | InfoJob            |   | Cyan, Emerald, Amber, Purple, Rose)         |   | Havnegata 48... Address    | | |
 | | +--------------------+   +---------------------------------------------+   +----------------------------+ | |
 | +-----------------------------------------------------------------------------------------------------------+ |
 |                                                                                                               |
@@ -73,21 +73,21 @@ The dashboard implements the exact layout specified in the project wireframe blu
 | +-----------------------------------------------------------------------------------------------------------+ |
 |                                                                                                               |
 | +---------------------------------------------------+   +---------------------------------------------------+ |
-| | Company details (All 13 items)                    |   | Some more details (Narrative & Mod-11 Math)       | |
-| |   Company name & Org.nr                           |   +---------------------------------------------------+ |
-| |   1. Organization number (Org.nr)                 |                                                         |
+| | Company details (All 13 items)                    |   | Executive Synthesis & Overview                    | |
+| |   Company name & Org.nr                           |   |   - Executive Narrative Briefing                  | |
+| |   1. Organization number (Org.nr)                 |   |   - Mission Footprint & Headquarter Location      | |
 | |   2. Legal entity type                            |   +---------------------------------------------------+ |
-| |   3. Registration date                            |   | Cards as some more details                        | |
-| |   4. Status (active/bankrupt)                     |   |   - Audited Financial Accounts                    | |
-| |   5. Industry code (NACE)                         |   |   - Corporate Governance & Board                  | |
-| |   6. Registered address                           |   |   - Filing History & Delta Stream Sync            | |
-| |   7. Board members & CEO                          |   |   - Grounded AI Research Copilot                  | |
-| |   8. Owners/shareholders                          |   |                                                   | |
-| |   9. Annual accounts (turnover...)                |   |                                                   | |
+| |   3. Registration date                            |                                                         |
+| |   4. Status (active/bankrupt)                     |   +---------------------------------------------------+ |
+| |   5. Industry code (NACE)                         |   | Extended Intelligence Cards                       | |
+| |   6. Registered address                           |   |   - Audited Financial Accounts & Solvency         | |
+| |   7. Board members & CEO                          |   |   - Corporate Governance & Board Roster           | |
+| |   8. Owners/shareholders                          |   |   - Filing History & Delta Stream Sync            | |
+| |   9. Annual accounts (turnover...)                |   |   - Grounded AI Research Copilot                  | |
 | |  10. Filing history                               |   |                                                   | |
 | |  11. Number of employees                          |   |                                                   | |
 | |  12. VAT registration status                      |   |                                                   | |
-| |  13. Source of data (Links & dates)               |   |                                                   | |
+| |  13. Source of data (Web pages & in-app cert)     |   |                                                   | |
 | |                                                   |   |                                                   | |
 | | (Smooth internal scrolling)                       |   | (Smooth internal scrolling)                       | |
 | +---------------------------------------------------+   +---------------------------------------------------+ |
@@ -96,18 +96,23 @@ The dashboard implements the exact layout specified in the project wireframe blu
 
 ### Layout Components
 
-1. **Top Header Bar**:
+1. **Top Header Bar with Individual Page Colors**:
    - **Left**: `Project name: InfoJob`.
-   - **Middle**: Five User-Facing Navigation Pages (`Dashboard`, `Company Profiles`, `Research / Search`, `Research Insights`, `Settings`).
+   - **Middle**: Five User-Facing Navigation Pages, each styled with an **individual color identity** for hover, active state, and page-header accent strips:
+     - **Dashboard** (`#nav-btn-dashboard`): **Electric Cyan** (`#38bdf8` / `#06b6d4`)
+     - **Company Profiles** (`#nav-btn-profiles`): **Emerald Mint** (`#34d399` / `#10b981`)
+     - **Research / Search** (`#nav-btn-research`): **Warm Amber Gold** (`#fbbf24` / `#f59e0b`)
+     - **Research Insights** (`#nav-btn-insights`): **Vibrant Violet Purple** (`#c084fc` / `#a855f7`)
+     - **Settings** (`#nav-btn-settings`): **Coral Rose Pink** (`#fb7185` / `#f43f5e`)
    - **Right**: Quick Theme Switcher (`Dark` / `Light` / `Slate` / `OLED`) and Contact Address (`Havnegata 48, 8900 Brønnøysund, Norway`).
-3. **Project Summary Banner**:
+2. **Project Summary Banner**:
    - Full-width banner summarizing system capabilities, NLOD 2.0 open government data compliance, and multi-registry integration.
-4. **Search Bar with Apify Code / Details**:
-   - Full-width input supporting organization number, company name, or Apify actor query.
-   - Real-time Modulo-11 indicator chip (`✓ MOD 11` or `✗ Invalid`).
-   - `Search` and `Apify Query` action buttons with 1-click sample company chips.
-5. **Two-Column Main Content with Scrolling**:
-   - **Left Card ("Company details")**: Contains company name and all **13 numbered items** inside a smoothly scrollable container (`overflow-y: auto`):
+3. **Search Bar with Discovery & Market Matrix**:
+   - Full-width input supporting organization number, company name, or industry keyword.
+   - Real-time Modulo-11 indicator chip (`VERIFIED ORG` or `INVALID ORG`).
+   - Quick search actions and 1-click verified enterprise chips.
+4. **Two-Column Main Content with Scrolling**:
+   - **Left Card ("Company details")**: Contains company name, legal form badges, and all **13 numbered items** inside a smoothly scrollable container:
      1. Organization number (Org.nr)
      2. Legal entity type
      3. Registration date
@@ -120,18 +125,26 @@ The dashboard implements the exact layout specified in the project wireframe blu
      10. Filing history
      11. Number of employees
      12. VAT registration status
-     13. Source of data (clickable official permalinks & timestamps)
-   - **Right Column (Top) ("Some more details")**: Executive narrative briefing, live step-by-step Modulo-11 arithmetic breakdown ($p_1 \dots p_8 \to d_9$), and Apify live status.
-   - **Right Column (Bottom) ("Cards as some more details")**: Bento cards for Audited Accounts, Corporate Governance, Filing & Delta Stream Sync, and Grounded AI Research Copilot.
+     13. Source of data: Opens **official human-readable web portal pages** (not raw JSON):
+         - **Enhetsregisteret Web Portal**: `https://virksomhet.brreg.no/nb/oppslag/enheter/{orgnr}`
+         - **Brønnøysund Gazette & Announcements**: `https://w2.brreg.no/kunngjoring/hent_enhet.jsp?orgnr={orgnr}`
+         - **Proff.no Audited Accounts**: `https://www.proff.no/bransjesøk?q={orgnr}`
+         - **In-App Registry Source Certificate**: Dedicated modal displaying official government provenance, NLOD 2.0 license, and statutory timestamps.
+   - **Right Column (Top) ("Executive Synthesis & Overview")**: Executive narrative briefing, mission footprint, registered workforce, and live registry status.
+   - **Right Column (Bottom) ("Extended Intelligence Cards")**: Bento cards for Audited Accounts & Financial Solvency, Corporate Governance, Filing & Delta Stream Sync, and Grounded AI Research Copilot.
 
 ---
 
 ## ✨ Key Features
 
 - **🛡️ 100% Modulo-11 Mathematical Rigor**  
-  Every 9-digit Norwegian organization number is validated using the official weights `[3, 2, 7, 6, 5, 4, 3, 2]`. The arithmetic trace is visually presented for auditing.
-- **🏛️ Sovereign Norwegian Public Registries**  
-  Integrates directly with *Enhetsregisteret*, *Roller & Styre*, *Regnskapsregisteret*, and *Oppdateringer* without third-party paywalls.
+  Every 9-digit Norwegian organization number is validated using official weights `[3, 2, 7, 6, 5, 4, 3, 2]` before network dispatch, backed by comprehensive unit tests.
+- **🏛️ Sovereign Norwegian Public Registries & Human-Readable Portals**  
+  Integrates directly with *Enhetsregisteret*, *Roller & Styre*, *Regnskapsregisteret*, and *Oppdateringer*. Links lead directly to official human-readable government pages rather than raw API JSON strings.
+- **📜 Interactive Registry Source Certificate**  
+  One-click in-app provenance certificate modal providing legal entity details, registration dates, MVA status, and direct regulatory links.
+- **🎨 Individual Navbar Page Colors & High-Contrast Visibility**  
+  Each page in the top navbar features an individual color identity (Cyan, Emerald, Amber, Violet, Rose) with matching page strip accents and crisp, high-visibility contrast across dark and light themes.
 - **📜 Smooth Scrolling for All 13 Company Details**  
   The left dossier card and right cards container feature custom scrollbars so extensive facts, board rosters, and accounts are completely accessible without distorting the layout.
 - **🔄 Live Delta Freshness Synchronization**  
@@ -140,8 +153,8 @@ The dashboard implements the exact layout specified in the project wireframe blu
   Dedicated `/api/apify/search` endpoint and frontend button allowing live web crawling and actor data enrichment.
 - **🤖 Grounded AI Research Copilot**  
   Instant Q&A engine (`/api/agent/query`) providing factual answers anchored directly in the 13 company facts with zero hallucination.
-- **📊 1,051 Pre-Harvested Companies**  
-  Pre-loaded with over 11,200 verified facts exported to SQLite, JSON, JSONL, and CSV.
+- **📊 1,054 Pre-Harvested Companies (Full Market Coverage)**  
+  Pre-loaded with 1,054 profiles and over 11,800 verified facts exported to SQLite, JSON, JSONL, and CSV, with an interactive Market Matrix supporting real-time search.
 
 ---
 
@@ -361,13 +374,13 @@ To allow LLMs and automated tools to ingest the entire project architecture in m
 
 All company information is extracted under the **Norwegian Licence for Open Government Data (NLOD 2.0)**:
 
-| Source | Agency | Endpoint / Access | Extracted Facts |
-| :--- | :--- | :--- | :--- |
-| **Enhetsregisteret** | Brønnøysundregistrene | REST API (`/enheter/{orgnr}`) | Legal name, Org.nr, entity form, foundation date, address, NACE industry code, employees, VAT/MVA status, bankruptcy flags. |
-| **Roller i Enhetsregisteret** | Brønnøysundregistrene | REST API (`/enheter/{orgnr}/roller`) | Daglig Leder (CEO), Styreleder (Board Chair), Board Members, Authorized Auditor, appointment dates. |
-| **Regnskapsregisteret** | Brønnøysundregistrene | REST API (`/regnskap/{orgnr}`) | Audited revenue/turnover, operating profit (EBIT), total assets, total equity, currency, filing status. |
-| **Oppdateringer Stream** | Brønnøysundregistrene | REST API (`/oppdateringer`) | Sequential delta update timestamps for continuous freshness synchronization. |
-| **Apify Real-time Adapter** | Apify Cloud | Synchronous Actor Execution | Web crawl footprint, external entity verification, live enrichment. |
+| Source | Agency | Public Web Portal (Human-Readable) | REST API Endpoint | Extracted Facts |
+| :--- | :--- | :--- | :--- | :--- |
+| **Enhetsregisteret** | Brønnøysundregistrene | [`virksomhet.brreg.no`](https://virksomhet.brreg.no) (Official Entity Lookup) | `/enheter/{orgnr}` | Legal name, Org.nr, entity form, foundation date, address, NACE industry code, employees, VAT/MVA status, bankruptcy flags. |
+| **Roller i Enhetsregisteret** | Brønnøysundregistrene | [`w2.brreg.no/kunngjoring`](https://w2.brreg.no/kunngjoring) (Statutory Gazette) | `/enheter/{orgnr}/roller` | Daglig Leder (CEO), Styreleder (Board Chair), Board Members, Authorized Auditor, appointment dates. |
+| **Regnskapsregisteret** | Brønnøysundregistrene | [`proff.no`](https://www.proff.no) (Audited Accounts & Solvency) | `/regnskap/{orgnr}` | Audited revenue/turnover, operating profit (EBIT), total assets, total equity, currency, filing status. |
+| **Oppdateringer Stream** | Brønnøysundregistrene | [`w2.brreg.no/kunngjoring`](https://w2.brreg.no/kunngjoring) (Announcements) | `/oppdateringer` | Sequential delta update timestamps for continuous freshness synchronization. |
+| **Apify Real-time Adapter** | Apify Cloud | Apify Store / Cloud Actors | Synchronous Actor Execution | Web crawl footprint, external entity verification, live enrichment. |
 
 ---
 
@@ -390,7 +403,7 @@ Base URL: `http://127.0.0.1:8000/api`
 ## 📦 Submission Deliverables Checklist
 
 - [x] **1. At least 1,000 Company Profiles**
-  - Stored in SQLite: `data/company_profiles.db` (**1,051 profiles, 11,200+ facts**)
+  - Stored in SQLite: `data/company_profiles.db` (**1,054 profiles, 11,800+ facts**)
   - Structured JSON: `data/profiles_1000.json` (8.7 MB)
   - Streaming JSONL: `data/profiles_1000.jsonl` (6.7 MB)
   - Summary CSV: `data/profiles_1000_summary.csv`
@@ -405,14 +418,14 @@ Base URL: `http://127.0.0.1:8000/api`
     ```
 - [x] **5. Model/API Details**
   - Mathematical Engine: Modulo-11 Checksum Validator (`signalpost/core/validator.py`)
-  - Primary Registries: Brønnøysundregistrene Open APIs (NLOD 2.0)
+  - Primary Registries: Brønnøysundregistrene Open APIs & Web Portals (NLOD 2.0)
   - AI Synthesis: Grounded Deterministic Engine + Google Gemini 2.0 Flash fallback
   - Web Crawler: Apify Actor Source Adapter (`signalpost/sources/apify_source.py`)
 - [x] **6. Expected Run Costs**
   - Registry Data Ingestion: **$0.00** (Free open public data under NLOD 2.0)
   - Profile Synthesis: **$0.00** via deterministic engine, or **<$0.0001** per profile via Gemini 2.0 Flash
   - Mathematical Cost:
-    $$\text{Total Run Cost} = 1,051 \times \$0.00 = \$0.00$$
+    $$\text{Total Run Cost} = 1,054 \times \$0.00 = \$0.00$$
 
 ---
 
