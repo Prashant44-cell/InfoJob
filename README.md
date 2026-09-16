@@ -466,5 +466,4 @@ python -m unittest discover -s tests -p "test_*.py" -v
 - **SignalPost / InfoJob Team** - Autonomous Norwegian Corporate Intelligence
 - **Brønnøysundregistrene** - Sovereign open data via [data.brreg.no](https://data.brreg.no)
 - Documentation written according to [GeeksforGeeks README Guidelines](https://www.geeksforgeeks.org/git/what-is-readme-md-file/).
-#   I n f o J o b  
- 
+#
