@@ -57,54 +57,49 @@ The dashboard implements the exact layout specified in the project wireframe blu
 
 ```text
 +---------------------------------------------------------------------------------------------------------------+
-| +---------+  +----------------------------------------------------------------------------------------------+ |
-| |         |  | +--------------------+   +---------------------------------------+   +---------------------+ | |
-| |         |  | | Project name:      |   | Navbar with link content and          |   | Contact address     | | |
-| |         |  | | InfoJob /          |   | slide page                            |   | Havnegata 48...     | | |
-| |         |  | | SignalPost         |   |                                       |   |                     | | |
-| |         |  | +--------------------+   +---------------------------------------+   +---------------------+ | |
-| |         |  +----------------------------------------------------------------------------------------------+ |
-| |         |                                                                                                   |
-| |         |  +----------------------------------------------------------------------------------------------+ |
-| | S       |  | Project summary: Autonomous Norwegian corporate intelligence system...                       | |
-| | I       |  +----------------------------------------------------------------------------------------------+ |
-| | D       |                                                                                                   |
-| | E       |  +----------------------------------------------------------------------------------------------+ |
-| | B       |  | Search bar with company details like name or some code as given by Apify                     | |
-| | A       |  +----------------------------------------------------------------------------------------------+ |
-| | R       |                                                                                                   |
-| |         |  +-------------------------------------+  +-----------------------------------------------------+ |
-| |         |  | Company details (All 13 items)      |  | Some more details (Narrative & Mod-11 Math)         | |
-| |         |  |   Company name & Org.nr             |  +-----------------------------------------------------+ |
-| |         |  |   1. Organization number (Org.nr)   |                                                          |
-| |         |  |   2. Legal entity type              |  +-----------------------------------------------------+ |
-| |         |  |   3. Registration date              |  | Cards as some more details                          | |
-| |         |  |   4. Status (active/bankrupt)       |  |   - Audited Financial Accounts                      | |
-| |         |  |   5. Industry code (NACE)           |  |   - Corporate Governance & Board                    | |
-| |         |  |   6. Registered address             |  |   - Filing History & Delta Stream Sync              | |
-| |         |  |   7. Board members & CEO            |  |   - Grounded AI Research Copilot                    | |
-| |         |  |   8. Owners/shareholders            |  |                                                     | |
-| |         |  |   9. Annual accounts (turnover...)  |  |                                                     | |
-| |         |  |  10. Filing history                 |  |                                                     | |
-| |         |  |  11. Number of employees            |  |                                                     | |
-| |         |  |  12. VAT registration status        |  |                                                     | |
-| | Dev-    |  |  13. Source of data (Links & dates) |  |                                                     | |
-| | eloper  |  |                                     |  |                                                     | |
-| | details |  | (Smooth internal scrolling)         |  | (Smooth internal scrolling)                         | |
-| +---------+  +-------------------------------------+  +-----------------------------------------------------+ |
+| +-----------------------------------------------------------------------------------------------------------+ |
+| | +--------------------+   +---------------------------------------------+   +----------------------------+ | |
+| | | Project name:      |   | Top Navbar (Dashboard, Company Profiles,    |   | Theme Switcher &           | | |
+| | | InfoJob            |   | Research/Search, Insights, Settings)        |   | Havnegata 48... Address    | | |
+| | +--------------------+   +---------------------------------------------+   +----------------------------+ | |
+| +-----------------------------------------------------------------------------------------------------------+ |
+|                                                                                                               |
+| +-----------------------------------------------------------------------------------------------------------+ |
+| | Project summary: Autonomous Norwegian corporate intelligence system...                                    | |
+| +-----------------------------------------------------------------------------------------------------------+ |
+|                                                                                                               |
+| +-----------------------------------------------------------------------------------------------------------+ |
+| | Search bar with company details like name, orgnr, or Apify code                                            | |
+| +-----------------------------------------------------------------------------------------------------------+ |
+|                                                                                                               |
+| +---------------------------------------------------+   +---------------------------------------------------+ |
+| | Company details (All 13 items)                    |   | Some more details (Narrative & Mod-11 Math)       | |
+| |   Company name & Org.nr                           |   +---------------------------------------------------+ |
+| |   1. Organization number (Org.nr)                 |                                                         |
+| |   2. Legal entity type                            |   +---------------------------------------------------+ |
+| |   3. Registration date                            |   | Cards as some more details                        | |
+| |   4. Status (active/bankrupt)                     |   |   - Audited Financial Accounts                    | |
+| |   5. Industry code (NACE)                         |   |   - Corporate Governance & Board                  | |
+| |   6. Registered address                           |   |   - Filing History & Delta Stream Sync            | |
+| |   7. Board members & CEO                          |   |   - Grounded AI Research Copilot                  | |
+| |   8. Owners/shareholders                          |   |                                                   | |
+| |   9. Annual accounts (turnover...)                |   |                                                   | |
+| |  10. Filing history                               |   |                                                   | |
+| |  11. Number of employees                          |   |                                                   | |
+| |  12. VAT registration status                      |   |                                                   | |
+| |  13. Source of data (Links & dates)               |   |                                                   | |
+| |                                                   |   |                                                   | |
+| | (Smooth internal scrolling)                       |   | (Smooth internal scrolling)                       | |
+| +---------------------------------------------------+   +---------------------------------------------------+ |
 +---------------------------------------------------------------------------------------------------------------+
 ```
 
 ### Layout Components
 
-1. **Left Full-Height Sidebar (`SIDEBAR`)**:
-   - Spans the entire screen height with vertical `SIDEBAR` badge.
-   - Real-time search filter and fast selector list across all 1,051 companies.
-   - Anchored **Developer details** card at the bottom (`System: InfoJob / SignalPost`, `Model / Engine: Modulo-11 + AI Synthesizer`, `Database: SQLite`, `Single Command: python run.py --serve`, `Status: Live http://127.0.0.1:8000`).
-2. **Top Header Bar**:
-   - **Left**: `Project name: InfoJob • SignalPost`.
-   - **Middle**: `Navbar with link content and slide page` (`Dossier View`, `Market Matrix`, `Telemetry & Proof`, `Slide Page`, `API Docs`).
-   - **Right**: `Contact address` with click-to-view modal (`Havnegata 48, 8900 Brønnøysund, Norway`).
+1. **Top Header Bar**:
+   - **Left**: `Project name: InfoJob`.
+   - **Middle**: Five User-Facing Navigation Pages (`Dashboard`, `Company Profiles`, `Research / Search`, `Research Insights`, `Settings`).
+   - **Right**: Quick Theme Switcher (`Dark` / `Light` / `Slate` / `OLED`) and Contact Address (`Havnegata 48, 8900 Brønnøysund, Norway`).
 3. **Project Summary Banner**:
    - Full-width banner summarizing system capabilities, NLOD 2.0 open government data compliance, and multi-registry integration.
 4. **Search Bar with Apify Code / Details**:
@@ -458,3 +453,5 @@ python -m unittest discover -s tests -p "test_*.py" -v
 - **SignalPost / InfoJob Team** - Autonomous Norwegian Corporate Intelligence
 - **Brønnøysundregistrene** - Sovereign open data via [data.brreg.no](https://data.brreg.no)
 - Documentation written according to [GeeksforGeeks README Guidelines](https://www.geeksforgeeks.org/git/what-is-readme-md-file/).
+#   I n f o J o b  
+ 
