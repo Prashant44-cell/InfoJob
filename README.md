@@ -184,8 +184,8 @@ The dashboard implements the exact layout specified in the project wireframe blu
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/signalpost/norwegian-company-agent.git
-cd norwegian-company-agent
+git clone https://github.com/Prashant44-cell/InfoJob.git
+cd InfoJob
 ```
 
 ### 2. Set Up Virtual Environment (Recommended)
